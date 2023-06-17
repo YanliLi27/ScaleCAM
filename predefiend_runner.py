@@ -160,7 +160,7 @@ def medical_runner(target_category=None, model_flag:str='resnet', task:str='ddsm
                         Agent.creator_main(eval_act='corr', mm_ratio=1.5, use_origin=True)
 
 
-def esmira_runner(method:str='gradcam', target_category=None, data_dir:str='D:\\ESMIRA\\ESMIRA_common',
+def esmira_runner(target_category=None, data_dir:str='D:\\ESMIRA\\ESMIRA_common',
                 target_catename:list=['EAC','ATL'], target_site:list=['Wrist'], target_dirc:list=['TRA', 'COR']):
     # -------------------------------- optional: -------------------------------- #
     batch_size:int=16
