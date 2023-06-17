@@ -22,6 +22,7 @@ if __name__ == '__main__':
     cam_dir:str = './output/cam/taskname'
     batch_size:int=16
     target_category:Union[None, int, str]=1  # info of the running process
+    
     # more functions
     maxmin_flag:bool=False  # normalization
     remove_minus_flag:bool=True # remove the part below zero, default: True in the original Grad CAM

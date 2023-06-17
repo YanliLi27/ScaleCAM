@@ -1,5 +1,7 @@
 import os
 from torch.utils.data import DataLoader
+from typing import Union
+import numpy as np
 # analyzer
 from cam_components.agent.analyzer_funcs import cam_stats_step
 from cam_components.agent.im_funcs import im_save
@@ -14,7 +16,7 @@ from cam_components.methods import GradCAM_A, GradCAM_P, FullCAM_A, FullCAM_P, G
 class CAMAgent:
     def __init__(self,
                 # ---------------- model and dataset -------------#
-                model, target_layer, dataset:DataLoader,  
+                model, target_layer, dataset:Union[DataLoader, np.array],  
                 num_out_channel:int=512, num_classes:int=2,  
                 groups:int=1, fold_order:int=0,  
                 # ---------------- model and dataset -------------#
@@ -82,14 +84,15 @@ class CAMAgent:
 
 
     def analyzer_main(self):
-        im_overall, im_target, im_diff, cam_grad_max_matrix, cam_grad_min_matrix \
-            = cam_stats_step(self.cam_method, self.target_layer, # for the cam setting
-                            self.model, self.dataset, self.num_out_channel, self.num_classes, # for the model and dataset
-                            target_category=self.target_category,
-                            batch_size=self.batch_size
-                            )
-        im_save(im_overall, im_target, im_diff, cam_grad_max_matrix, cam_grad_min_matrix,
-                self.im_path)
+        if not os.path.isfile(self.im_path):  # only when the file dosen't exist -- because some loop would be repeated in experiments
+            im_overall, im_target, im_diff, cam_grad_max_matrix, cam_grad_min_matrix \
+                = cam_stats_step(self.cam_method, self.target_layer, # for the cam setting
+                                self.model, self.dataset, self.num_out_channel, self.num_classes, # for the model and dataset
+                                target_category=self.target_category,
+                                batch_size=self.batch_size
+                                )
+            im_save(im_overall, im_target, im_diff, cam_grad_max_matrix, cam_grad_min_matrix,
+                    self.im_path)
         
 
 
