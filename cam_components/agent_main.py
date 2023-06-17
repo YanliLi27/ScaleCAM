@@ -6,7 +6,6 @@ from cam_components.agent.im_funcs import im_save
 # predictor
 from cam_components.agent.creator_funcs import cam_creator_step
 from cam_components.agent.utils.target_cam_calculation import target_cam_selection
-from cam_components.agent.utils.default_args import default_args
 from cam_components.agent.im_funcs import im_reader, maxmin_reader
 # cam methods
 from cam_components.methods import GradCAM_A, GradCAM_P, FullCAM_A, FullCAM_P, GradCAMPP_A, GradCAMPP_P, XGradCAM_A, XGradCAM_P
