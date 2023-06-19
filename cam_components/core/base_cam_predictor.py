@@ -239,11 +239,17 @@ class BaseCAM_P:
                 # print('min of scaled cam:', np.min(np.asarray(scaled)))
                 # scaled [groups, length, width] / 3D scaled [groups, depth, length, width]
                 cam_per_target_layer_per_batch.append(scaled)  # list[batch* [groups, depth, length, width]]
-            cam_per_target_layer.extend(cam_per_target_layer_per_batch)  # list[target_layers,(array[batch, groups, (depth),length, width])]
-            # list[(num_target_layer*batch)*array[groups, depth, length, width]]]
+            cam_per_target_layer.append(cam_per_target_layer_per_batch)  # list[target_layers,(array[batch, groups, (depth),length, width])]
+            # list[num_target_layer*[batch*array[groups, depth, length, width]]]
 
-        return cam_per_target_layer # list[(num_target_layer*batch)*array[groups, depth, length, width]]]
-        # -  1*16(target_layers/batch) * array(2(groups), 512, 512) -- [16*array[2, 512, 512]]
+        return self._aggregate_multi_layers(cam_per_target_layer)
+        # - list[(num_target_layer*batch)*array[groups, depth, length, width]]]
+        # - 1*16(target_layers/batch) * array(2(groups), 512, 512) -- [16*array[2, 512, 512]]
+
+    def _aggregate_multi_layers(self, cam_per_target_layer):  # 当target layer不止一层时采用平均的方式合成到一起
+        cam_per_target_layer = np.concatenate(cam_per_target_layer, axis=1)  # axis=1是为了在list内越过batch那一维度
+        # [target_layers* (array[batch, all_channels])] --> []
+        return np.mean(cam_per_target_layer, axis=1)
 
     def scale_cam_image(self, cam, target_size=None, prob_weights=1.0):
         result = []

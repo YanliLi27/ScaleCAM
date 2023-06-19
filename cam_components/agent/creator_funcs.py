@@ -64,7 +64,7 @@ def cam_creator_step(cam_algorithm, model, target_layer, dataset, cam_dir,  # re
                 grayscale_cam, predict_category, pred_score, nega_score = cam(input_tensor=x,
                                                                             gt=y,
                                                                             target_category=target_category)
-                # theory: grayscale_cam -- target_layer*batch * array[groups, (depth), length, width]
+                # theory: grayscale_cam -- batch * (target_layer_aggregated)_array[groups, (depth), length, width]
                 # proved: grayscale_cam -- 16 * [1, 256, 256] - batch * [1, 256, 256]
 
                 # ---------------------------------------  cam create  --------------------------------------- #

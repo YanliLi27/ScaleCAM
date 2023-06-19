@@ -149,6 +149,8 @@ class BaseCAM_A:
                       for g in self.activations_and_grads.gradients]
         # Loop over the saliency image from every layer
         cam_importance_matrix = []
+        cam_max_matrix = []
+        cam_min_matrix = []
         for target_layer, layer_activations, layer_grads in \
                 zip(self.target_layers, activations_list, grads_list):
             cam, cam_grad_max_value, cam_grad_min_value = self.get_cam_image(input_tensor,
@@ -158,28 +160,19 @@ class BaseCAM_A:
                                                                             layer_grads) 
             # cam = [batch, all_channels]
             cam_importance_matrix.append(cam)  # list [target_layers, (array[batch, all_channels])]
-
-        return cam_importance_matrix, cam_grad_max_value, cam_grad_min_value
+            cam_max_matrix.append(cam_grad_max_value)
+            cam_min_matrix.append(cam_grad_min_value)
+        
+        return self._aggregate_multi_layers(cam_importance_matrix),\
+                self._aggregate_multi_layers(cam_grad_max_value),\
+                self._aggregate_multi_layers(cam_grad_min_value)
         # list[target_layers,(array[batch, channel, length, width])]
         # to -  1(target_layers/batch) * all channels(256 for each - 2* 256))
 
-    def aggregate_multi_layers(self, cam_per_target_layer):  # 当target layer不止一层时采用平均的方式合成到一起
-        cam_per_target_layer = np.concatenate(cam_per_target_layer, axis=1)
-        cam_per_target_layer = np.maximum(cam_per_target_layer, 0)
-        result = np.mean(cam_per_target_layer, axis=1)
-        return self.scale_cam_image(result)
-
-    def scale_cam_image(self, cam, target_size=None):
-        result = []
-        for img in cam: 
-            img = img - np.min(img)
-            img = img / (1e-7 + np.max(img))  # 此处是因为np.min - np.min已经为0了
-            if target_size is not None:
-                img = cv2.resize(img, target_size)
-            result.append(img)
-        result = np.float32(result)
-
-        return result
+    def _aggregate_multi_layers(self, cam_per_target_layer):  # 当target layer不止一层时采用平均的方式合成到一起
+        cam_per_target_layer = np.concatenate(cam_per_target_layer, axis=1)  # axis=1是为了在list内越过batch那一维度
+        # [target_layers* (array[batch, all_channels])] --> []
+        return np.mean(cam_per_target_layer, axis=1)
 
     def __call__(self,
                  input_tensor,

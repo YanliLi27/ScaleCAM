@@ -44,7 +44,8 @@ def cam_stats_step(cam_algorithm, target_layers, # for the cam setting
             cam_grad_min_matrix.extend(cam_grad_min_value)
 
             # proved: grayscale_cam - 1* [16, 512]
-            grayscale_cam = grayscale_cam[0]  # [1, all_channel] remove the target layers
+            if type(grayscale_cam)==list:
+                grayscale_cam = grayscale_cam[0]  # [1, all_channel] remove the target layers
             # grayscale_cam - [16, 512]
             for i in range(batch_size): # [all_channel]
                 single_grayscale_cam, single_predict_category, single_confidence = grayscale_cam[i], predict_category[i], confidence[i]

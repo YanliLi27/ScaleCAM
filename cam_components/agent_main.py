@@ -96,7 +96,6 @@ class CAMAgent:
                                 )
             im_save(im_overall, im_target, im_diff, cam_grad_max_matrix, cam_grad_min_matrix,
                     self.im_path)
-        
 
 
     def creator_main(self, eval_act:str='false', mm_ratio:float=1.5, use_origin:bool=True):
