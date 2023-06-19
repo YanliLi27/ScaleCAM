@@ -62,6 +62,8 @@ class CAMAgent:
         # early stop
         if max_iter is not None:
             self.max_iter = max_iter
+        else:
+            self.max_iter = None
 
         # model randomization for sanity check
         self.randomization = randomization
@@ -69,11 +71,11 @@ class CAMAgent:
         self.random_severity = random_severity
 
         # output info
-        im_name = f'All_fold{self.fold_order}_im_cate{self.target_category}_{self.cam_method}.csv' 
+        im_name = f'All_fold{self.fold_order}_im_cate{self.target_category}_{cam_method}.csv' 
         im_path = os.path.join(im_dir, im_name)
         self.im_path = im_path
 
-        cam_son_dir = f'fold{self.fold_order}_cate{self.target_category}_mt{self.cam_method}'
+        cam_son_dir = f'fold{self.fold_order}_cate{self.target_category}_mt{cam_method}'
         cam_sub_dir = f'norm{self.maxmin_flag}_rm0{self.remove_minus_flag}_{self.im_selection_mode}{self.im_selection_extra}'
         self.cam_dir = os.path.join(cam_dir, cam_son_dir, cam_sub_dir)
         if not os.path.exists(self.cam_dir):
@@ -85,8 +87,9 @@ class CAMAgent:
 
     def analyzer_main(self):
         if not os.path.isfile(self.im_path):  # only when the file dosen't exist -- because some loop would be repeated in experiments
+            print('--------- creating IMs ---------')
             im_overall, im_target, im_diff, cam_grad_max_matrix, cam_grad_min_matrix \
-                = cam_stats_step(self.cam_method, self.target_layer, # for the cam setting
+                = cam_stats_step(self.cam_method[0], self.target_layer, # for the cam setting
                                 self.model, self.dataset, self.num_out_channel, self.num_classes, # for the model and dataset
                                 target_category=self.target_category,
                                 batch_size=self.batch_size
@@ -103,6 +106,7 @@ class CAMAgent:
         '''
             
         # step 1. im_read - or not
+        print('--------- creating CAMs ---------')
         if os.path.exists(self.im_path) and self.im_selection_mode != 'all':
             print('loading importance matrix with mode:{}'.format(self.im_selection_mode))
             im = im_reader(self.im_path, self.im_selection_mode)
@@ -120,7 +124,7 @@ class CAMAgent:
             data_max_value, data_min_value = None, None
         
         # step 3. pred step
-        cam_creator_step(self.cam_method, self.model, self.target_layer, self.dataset, self.cam_dir,  # required attributes
+        cam_creator_step(self.cam_method[1], self.model, self.target_layer, self.dataset, self.cam_dir,  # required attributes
                         # optional function:
                         im=im, data_max_value=data_max_value, data_min_value=data_min_value, remove_minus_flag=self.remove_minus_flag,
                         max_iter=self.max_iter, use_origin=use_origin,

@@ -25,7 +25,7 @@ def transform_generator(model_flag:str='vgg', task_flag:str='CatsDogs', phase:st
     return data_transform
 
 
-def dataset_generator(model_flag:str='vgg', task:str='CatsDogs', dataset_split:str='val', pre_root=None, fold_order:int=0):
+def dataset_generator(model_flag:str='vgg', task:str='CatsDogs', dataset_split:str='val', pre_root=None):
     data_transform = transform_generator(model_flag, task, dataset_split)
     if task == 'CatsDogs':
         # define root:
