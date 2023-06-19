@@ -13,7 +13,7 @@ def main_generator(model_flag:str='resnet',
 
     # import the dataloader for different inputs -------------------------------------------#
     target_dataset, in_channel, out_channel, num_classes = dataset_generator(model_flag=model_flag, task=task, dataset_split=dataset_split,
-                                                                             pre_root=None, fold_order=fold_order)
+                                                                             pre_root=None)
 
     # set up the model and find target_layers
     model, target_layer = model_generator(model_flag, weights_path, task, randomization, random_severity, in_channel, num_classes, layer_preset=True)

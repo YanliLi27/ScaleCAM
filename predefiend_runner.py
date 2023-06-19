@@ -14,6 +14,8 @@ def naturalimage_runner(target_category=None, model_flag:str='resnet', task:str=
     max_iter=max_iter  # early stop
     groups:int=1
     # -------------------------------- optional end -------------------------------- #
+    assert task in ['CatsDogs', 'MNIST', 'Imagenet']
+    assert model_flag in ['vgg', 'resnet', 'scratch', 'scratch_mnist']
 
 
     # information needed:
@@ -109,7 +111,7 @@ def catsdog3d_runner(target_category=None, model_flag:str='resnet', task:str='ca
                     Agent.creator_main(eval_act='corr', mm_ratio=1.5, use_origin=use_origin)
     
 
-def medical_runner(target_category=None, model_flag:str='resnet', task:str='ddsm', dataset_split:str='val'):
+def medical_runner(target_category=None, task:str='luna', dataset_split:str='val'):
     # -------------------------------- optional: -------------------------------- #
     batch_size:int=16
     target_category:Union[None, int, str]=1  # info of the running process
@@ -118,6 +120,7 @@ def medical_runner(target_category=None, model_flag:str='resnet', task:str='ddsm
     max_iter=None  # early stop
     groups:int=1  # no group convolution here
     # -------------------------------- optional end -------------------------------- #
+    assert task in ['luna', 'rsna', 'siim', 'us', 'ddsm' ]
 
     # information needed:
     from predefined.multi_components.generators.multi_task_generators import get_data_weight_output_path
