@@ -163,9 +163,12 @@ class BaseCAM_A:
             cam_max_matrix.append(cam_grad_max_value)
             cam_min_matrix.append(cam_grad_min_value)
         
-        return self._aggregate_multi_layers(cam_importance_matrix),\
-                self._aggregate_multi_layers(cam_grad_max_value),\
-                self._aggregate_multi_layers(cam_grad_min_value)
+        if len(self.target_layers)>1:
+            return self._aggregate_multi_layers(cam_importance_matrix),\
+                    self._aggregate_multi_layers(cam_max_matrix),\
+                    self._aggregate_multi_layers(cam_min_matrix)
+        else:
+            return cam_importance_matrix[0], cam_max_matrix[0], cam_min_matrix[0]
         # list[target_layers,(array[batch, channel, length, width])]
         # to -  1(target_layers/batch) * all channels(256 for each - 2* 256))
 

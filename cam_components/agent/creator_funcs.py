@@ -65,7 +65,7 @@ def cam_creator_step(cam_algorithm, model, target_layer, dataset, cam_dir,  # re
                                                                             gt=y,
                                                                             target_category=target_category)
                 # theory: grayscale_cam -- batch * (target_layer_aggregated)_array[groups, (depth), length, width]
-                # proved: grayscale_cam -- 16 * [1, 256, 256] - batch * [1, 256, 256]
+                # proved: grayscale_cam -- 16 * [1(groups), 256, 256] - batch * [1(groups), 256, 256]
 
                 # ---------------------------------------  cam create  --------------------------------------- #
                 if not os.path.exists(cam_dir):
