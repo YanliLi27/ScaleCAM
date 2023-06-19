@@ -4,11 +4,12 @@ from torch.utils.data import DataLoader
 import os
 
 
-def naturalimage_runner(target_category=None, model_flag:str='resnet', task:str='CatsDogs', dataset_split:str='val',
+def naturalimage_runner(target_category:Union[None, int, str]=None, model_flag:str='resnet',
+                        task:str='CatsDogs', dataset_split:str='val',
                         max_iter=None, randomization=False, random_severity=0):
     # -------------------------------- optional: -------------------------------- #
     batch_size:int=16
-    target_category:Union[None, int, str]=1  # info of the running process
+    target_category:Union[None, int, str]=target_category  # info of the running process
     # more functions
     im_selection_extra:float=0.05  # importance matrices attributes
     max_iter=max_iter  # early stop
@@ -34,10 +35,9 @@ def naturalimage_runner(target_category=None, model_flag:str='resnet', task:str=
     fold_order:int=0
 
     # -------------------------------- start loop -------------------------------- #
-
-    cam_method_zoo = ['gradcam', 'fullcam', 'gradcampp', 'xgradcam']
+    cam_method_zoo = ['fullcam', 'gradcam', 'gradcampp', 'xgradcam']
     maxmin_flag_zoo = [True, False]  # intensity scaling
-    remove_minus_flag_zoo = [True, False]  # remove the part below zero, default: True in the original Grad CAM
+    remove_minus_flag_zoo = [False, True]  # remove the part below zero, default: True in the original Grad CAM
     im_selection_mode_zoo = ['all', 'diff_top']  # use feature selection or not -- relied on the importance matrices
 
     for method in cam_method_zoo:
@@ -59,10 +59,10 @@ def naturalimage_runner(target_category=None, model_flag:str='resnet', task:str=
                     Agent.creator_main(eval_act='corr', mm_ratio=1.5, use_origin=use_origin)
 
 
-def catsdog3d_runner(target_category=None, model_flag:str='resnet', task:str='catsdogs3d', dataset_split:str='val'):    
+def catsdog3d_runner(target_category:Union[None, int, str]=1, task:str='catsdogs3d', dataset_split:str='val'):    
     # -------------------------------- optional: -------------------------------- #
     batch_size:int=16
-    target_category:Union[None, int, str]=1  # info of the running process
+    target_category:Union[None, int, str]=target_category  # info of the running process
     # more functions
     im_selection_extra:float=0.05  # importance matrices attributes
     max_iter=None  # early stop
@@ -86,10 +86,9 @@ def catsdog3d_runner(target_category=None, model_flag:str='resnet', task:str='ca
     fold_order:int=0
 
     # -------------------------------- start loop -------------------------------- #
-
-    cam_method_zoo = ['gradcam', 'fullcam', 'gradcampp', 'xgradcam']
+    cam_method_zoo = ['fullcam', 'gradcam', 'gradcampp', 'xgradcam']
     maxmin_flag_zoo = [True, False]  # intensity scaling
-    remove_minus_flag_zoo = [True, False]  # remove the part below zero, default: True in the original Grad CAM
+    remove_minus_flag_zoo = [False, True]  # remove the part below zero, default: True in the original Grad CAM
     im_selection_mode_zoo = ['all', 'diff_top']  # use feature selection or not -- relied on the importance matrices
 
     for method in cam_method_zoo:
@@ -111,10 +110,10 @@ def catsdog3d_runner(target_category=None, model_flag:str='resnet', task:str='ca
                     Agent.creator_main(eval_act='corr', mm_ratio=1.5, use_origin=use_origin)
     
 
-def medical_runner(target_category=None, task:str='luna', dataset_split:str='val'):
+def medical_runner(target_category:Union[None, int, str]=1, task:str='luna', dataset_split:str='val'):
     # -------------------------------- optional: -------------------------------- #
     batch_size:int=16
-    target_category:Union[None, int, str]=1  # info of the running process
+    target_category:Union[None, int, str]=target_category  # info of the running process
     # more functions
     im_selection_extra:float=0.05  # importance matrices attributes
     max_iter=None  # early stop
@@ -138,10 +137,9 @@ def medical_runner(target_category=None, task:str='luna', dataset_split:str='val
         
 
         # -------------------------------- start loop -------------------------------- #
-
-        cam_method_zoo = ['gradcam', 'fullcam', 'gradcampp', 'xgradcam']
+        cam_method_zoo = ['fullcam', 'gradcam', 'gradcampp', 'xgradcam']
         maxmin_flag_zoo = [True, False]  # intensity scaling
-        remove_minus_flag_zoo = [True, False]  # remove the part below zero, default: True in the original Grad CAM
+        remove_minus_flag_zoo = [False, True]  # remove the part below zero, default: True in the original Grad CAM
         im_selection_mode_zoo = ['all', 'diff_top']  # use feature selection or not -- relied on the importance matrices
 
         for method in cam_method_zoo:
@@ -163,11 +161,11 @@ def medical_runner(target_category=None, task:str='luna', dataset_split:str='val
                         Agent.creator_main(eval_act='corr', mm_ratio=1.5, use_origin=True)
 
 
-def esmira_runner(target_category=None, data_dir:str='D:\\ESMIRA\\ESMIRA_common',
+def esmira_runner(target_category:Union[None, int, str]=1, data_dir:str='D:\\ESMIRA\\ESMIRA_common',
                 target_catename:list=['EAC','ATL'], target_site:list=['Wrist'], target_dirc:list=['TRA', 'COR']):
     # -------------------------------- optional: -------------------------------- #
-    batch_size:int=16
-    target_category:Union[None, int, str]=1  # info of the running process
+    batch_size:int=5
+    target_category:Union[None, int, str]=target_category  # info of the running process
     # more functions
     im_selection_extra:float=0.05  # importance matrices attributes
     max_iter=None  # early stop
@@ -213,9 +211,9 @@ def esmira_runner(target_category=None, data_dir:str='D:\\ESMIRA\\ESMIRA_common'
 
 
         # -------------------------------- start loop -------------------------------- #
-        cam_method_zoo = ['gradcam', 'fullcam', 'gradcampp', 'xgradcam']
+        cam_method_zoo = ['fullcam', 'gradcam', 'gradcampp', 'xgradcam']
         maxmin_flag_zoo = [True, False]  # intensity scaling
-        remove_minus_flag_zoo = [True, False]  # remove the part below zero, default: True in the original Grad CAM
+        remove_minus_flag_zoo = [False, True]  # remove the part below zero, default: True in the original Grad CAM
         im_selection_mode_zoo = ['all', 'diff_top']  # use feature selection or not -- relied on the importance matrices
 
         for method in cam_method_zoo:

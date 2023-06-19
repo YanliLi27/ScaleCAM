@@ -15,5 +15,5 @@ def split_saver(target_category:list, target_site:list, target_dirc:list, target
         target_name = 1
     else:
         target_name = 0
-    output_name = "./esmira_components/dataset/logs/{}_{}_{}_{}.pkl".format(cate_name, site_name, dirc_name, target_name)
+    output_name = "./predefined/esmira_components/dataset/logs/{}_{}_{}_{}.pkl".format(cate_name, site_name, dirc_name, target_name)
     return output_name
