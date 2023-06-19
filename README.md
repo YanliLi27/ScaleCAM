@@ -25,7 +25,7 @@
     any combination is allowed, if you understand the type of data.
  
  
- 4. **Add more CAM methods, please see the /cam_components/\*cam.py and  /cam_components/\*cam_pred.py**
+ 4. **Add more CAM methods, please see the /cam_components/methods/\*cam.py and  /cam_components/core/\*cam_pred.py**
  
     > (1) \*cam.py is for the analyzer, \*cam_pred.py is for the CAM generation.
     
@@ -33,10 +33,10 @@
     
     > (3) Highly recommend to avoid using score CAM and the variants, as they takes too much time. 
 
-5. **Change the functions for importance matrices and evaluation, see /main_func/*.py**
+5. **Change the functions for importance matrices and evaluation, see /cam_components/agent/*.py**
 
 
-6. For the output, you can create a dir named output for collection.
+6. For the output, you can create a dir named output for collection, the default is ./output/im&cam&figs.
 
 
 
