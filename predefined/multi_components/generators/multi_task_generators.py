@@ -23,7 +23,7 @@ def _get_model(task_name:str=''):
         target_layer = [model.features[-1]]
         out_channel = 512
     elif task_name == 'us':
-        from multi_components.models.us_model import us_nn
+        from predefined.multi_components.models.us_model import us_nn
         model = us_nn(1, 2)
         target_layer = [model.cnn[-8]]
         out_channel = 128
@@ -62,31 +62,31 @@ def _get_weight(task_name:str=''):
 
 def _get_dataset(task_name:str=''):
     if task_name == 'ddsm':
-        from multi_components.dataset.ddsm_dataset import ddsm_initialization, DDSMDataset
+        from predefined.multi_components.dataset.ddsm_dataset import ddsm_initialization, DDSMDataset
         train_list, val_list = ddsm_initialization(train_dir='D:/ImageNet', load_save=True)
         train_dataset = DDSMDataset(train_list)
         val_dataset = DDSMDataset(val_list, val_flag=True)
         num_classes = 2
     elif task_name == 'luna':
-        from multi_components.dataset.luna_dataset import luna_cropped_initialization, LunaDataset
+        from predefined.multi_components.dataset.luna_dataset import luna_cropped_initialization, LunaDataset
         train_list, val_list = luna_cropped_initialization(train_dir='D:/ImageNet', load_save=True)
         train_dataset = LunaDataset(train_list, repeat=3)
         val_dataset = LunaDataset(val_list, val_flag=True, repeat=3)
         num_classes = 2
     elif task_name == 'rsna':
-        from multi_components.dataset.rsna_dataset import rsna_initialization, RSNADataset
+        from predefined.multi_components.dataset.rsna_dataset import rsna_initialization, RSNADataset
         train_paths, train_labels, val_paths, val_labels = rsna_initialization(train_dir='D:/ImageNet', load_save=True)
         train_dataset = RSNADataset(paths=train_paths, labels=train_labels)
         val_dataset = RSNADataset(paths=val_paths, labels=val_labels, val_flag=True)
         num_classes = 2
     elif task_name == 'us':
-        from multi_components.dataset.us_dataset import us_initialization, USDataset
+        from predefined.multi_components.dataset.us_dataset import us_initialization, USDataset
         train_list, val_list = us_initialization(train_dir='D:/ImageNet', classes=2, load_save=True)
         train_dataset = USDataset(train_list, repeat=1)
         val_dataset = USDataset(val_list, val_flag=True, repeat=1)
         num_classes = 2
     elif task_name == 'siim':
-        from multi_components.dataset.siim_dataset import siim_initialization, SIIMDataset
+        from predefined.multi_components.dataset.siim_dataset import siim_initialization, SIIMDataset
         train_list, val_list = siim_initialization(train_dir='D:/ImageNet', load_save=True)
         train_dataset = SIIMDataset(train_list)
         val_dataset = SIIMDataset(val_list, val_flag=True)

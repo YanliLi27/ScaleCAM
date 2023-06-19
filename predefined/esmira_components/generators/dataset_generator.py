@@ -1,8 +1,8 @@
 import os
-from generators.init_utils.dataset_scanner import ESMIRA_scanner
-from generators.init_utils.input_filter import input_filter
-from generators.init_utils.split_generator import class_generator, split_generator, split_definer, balancer, val_split_definer
-from generators.init_utils.central_slice import central_slice_generator
+from predefined.esmira_components.generators.init_utils.dataset_scanner import ESMIRA_scanner
+from predefined.esmira_components.generators.init_utils.input_filter import input_filter
+from predefined.esmira_components.generators.init_utils.split_generator import class_generator, split_generator, split_definer, balancer, val_split_definer
+from predefined.esmira_components.generators.init_utils.central_slice import central_slice_generator
 from dataset.datasets import ESMIRADataset2D
 from torch.utils.data import Dataset
 from typing import Union, Tuple
@@ -20,7 +20,7 @@ def ESMIRA_generator(data_root:str, target_category:list=['EAC', 'ATL'], target_
 
     # The common ids: common_list is the dict of EAC/CSA/ATL, that patients exist in all target_site
     # {'EAC':[LIST], 'CSA':[LIST], 'ATL':[LIST]}
-    default_id_path = './dataset/dicts/id_list.pkl'
+    default_id_path = './predefined/esmira_components/dataset/dicts/id_list.pkl'
     if os.path.isfile(default_id_path):
         with open(default_id_path, "rb") as tf:
             common_dict = pickle.load(tf)
@@ -31,7 +31,7 @@ def ESMIRA_generator(data_root:str, target_category:list=['EAC', 'ATL'], target_
         
     
     # calculate the central slices
-    default_cs_path = './dataset/dicts/name2central_list.pkl'
+    default_cs_path = './predefined/esmira_components/dataset/dicts/name2central_list.pkl'
     if os.path.isfile(default_cs_path):
         with open(default_cs_path, "rb") as tf:
             common_cs_dict = pickle.load(tf)

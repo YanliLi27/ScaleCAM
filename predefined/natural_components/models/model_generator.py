@@ -1,8 +1,8 @@
 import os
 import torchvision
 from torch import nn
-from generators.models.scratch_model import scratch_mnist, scratch_nn
-from generators.models.utils.find_layer import locate_candidate_layer
+from predefined.natural_components.models.scratch_model import scratch_mnist, scratch_nn
+from predefined.natural_components.models.utils.find_layer import locate_candidate_layer
 import torch
 
 
@@ -48,7 +48,7 @@ def model_generator(model_flag, weights_path, task, randomization, random_severi
 
     # model randomization -----------------------------------------------------------------#
     if randomization:
-        from utils.model_destroyer import model_destroyer
+        from predefined.natural_components.models.utils.model_destroyer import model_destroyer
         model = model_destroyer(model, model_flag, random_severity)
 
     # Target layer ------------------------------------------------------------------------#

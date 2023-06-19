@@ -63,7 +63,7 @@ def catsdog3d_runner(target_category=None, model_flag:str='resnet', task:str='ca
     target_category:Union[None, int, str]=1  # info of the running process
     # more functions
     im_selection_extra:float=0.05  # importance matrices attributes
-    max_iter=max_iter  # early stop
+    max_iter=None  # early stop
     groups:int=1
     # -------------------------------- optional end -------------------------------- #
 

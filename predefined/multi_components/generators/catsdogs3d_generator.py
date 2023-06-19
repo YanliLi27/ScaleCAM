@@ -7,7 +7,7 @@ import torchvision.transforms as transforms
 
 def _get_model(task_name:str=''):
     if task_name == 'catsdogs3d':
-        from multi_components.models.catsdogs_3d_model import catsdogs_3d_nn
+        from predefined.multi_components.models.catsdogs_3d_model import catsdogs_3d_nn
         model = catsdogs_3d_nn(in_channel=3, num_classes=2)
         target_layer = [model.cnn[-2]]
         out_channel = 512
@@ -32,7 +32,7 @@ def _get_weight(task_name:str=''):
 
 def _get_dataset(task_name:str=''):
     if task_name == 'catsdogs3d':
-        from multi_components.dataset.catsdogs_3d import CatDogDataset3D
+        from predefined.multi_components.dataset.catsdogs_3d import CatDogDataset3D
         train_dir = 'D:/CatsDogs/kaggle/working/extracted/train'
         data_transform = transforms.Compose([
             transforms.ToTensor(),

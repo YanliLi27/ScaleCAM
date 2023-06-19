@@ -1,10 +1,10 @@
 import os
-from esmira_components.generators.init_utils.dataset_scanner import ESMIRA_scanner
-from esmira_components.generators.init_utils.input_filter import input_filter
-from esmira_components.generators.init_utils.split_generator import class_generator, split_generator, split_definer, balancer, val_split_definer
-from esmira_components.generators.init_utils.central_slice import central_slice_generator
-from esmira_components.generators.init_utils.split_saver import split_saver
-from esmira_components.dataset.datasets import ESMIRADataset2D
+from predefined.esmira_components.generators.init_utils.dataset_scanner import ESMIRA_scanner
+from predefined.esmira_components.generators.init_utils.input_filter import input_filter
+from predefined.esmira_components.generators.init_utils.split_generator import class_generator, split_generator, split_definer, balancer, val_split_definer
+from predefined.esmira_components.generators.init_utils.central_slice import central_slice_generator
+from predefined.esmira_components.generators.init_utils.split_saver import split_saver
+from predefined.esmira_components.dataset.datasets import ESMIRADataset2D
 from torch.utils.data import Dataset
 from typing import Union, Tuple
 from torchvision import transforms
@@ -18,7 +18,7 @@ class ESMIRA_generator:
         # {'EAC':[LIST], 'CSA':[LIST], 'ATL':[LIST]}
         self.data_root = data_root
         self.target_category = target_category
-        self.default_id_path = './esmira_components/dataset/dicts/id_list.pkl'
+        self.default_id_path = './predefined/esmira_components/dataset/dicts/id_list.pkl'
         if os.path.isfile(self.default_id_path):
             with open(self.default_id_path, "rb") as tf:
                 self.common_dict = pickle.load(tf)
@@ -29,7 +29,7 @@ class ESMIRA_generator:
             
         
         # calculate the central slices
-        self.default_cs_path = './esmira_components/dataset/dicts/name2central_list.pkl'
+        self.default_cs_path = './predefined/esmira_components/dataset/dicts/name2central_list.pkl'
         if os.path.isfile(self.default_cs_path):
             with open(self.default_cs_path, "rb") as tf:
                 self.common_cs_dict = pickle.load(tf)

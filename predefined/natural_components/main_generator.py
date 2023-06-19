@@ -1,6 +1,6 @@
-from generators.datasets.dataset_generator import dataset_generator
-from generators.models.model_generator import model_generator
-from generators.path_creator.path_generator import path_generator
+from predefined.natural_components.datasets.dataset_generator import dataset_generator
+from predefined.natural_components.models.model_generator import model_generator
+from predefined.natural_components.path_creator.path_generator import path_generator
 
 
 def main_generator(model_flag:str='resnet',

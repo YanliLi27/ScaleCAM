@@ -38,7 +38,7 @@ def dataset_generator(model_flag:str='vgg', task:str='CatsDogs', dataset_split:s
         test_data_root = root.replace('train', 'test1')
         test_img_list = os.listdir(test_data_root)
         # set the dataset
-        from generators.datasets.utils.datasets import CatDogDataset
+        from predefined.natural_components.datasets.utils.datasets import CatDogDataset
         if dataset_split=='val':
             target_dataset = CatDogDataset(root, val_img_list, transform = data_transform)
         elif dataset_split=='train':
@@ -85,7 +85,7 @@ def dataset_generator(model_flag:str='vgg', task:str='CatsDogs', dataset_split:s
             root = pre_root
         if dataset_split!='val':
             raise ValueError('clickme only support validation set')
-        from generators.datasets.utils.datasets import ClickMeDataset
+        from predefined.natural_components.datasets.utils.datasets import ClickMeDataset
         target_dataset = ClickMeDataset(root=root, transform=data_transform)
         in_channel = 3
         out_channel = 512

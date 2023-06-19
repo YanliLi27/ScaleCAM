@@ -38,7 +38,7 @@ def _common_list_generator(init_dict:dict) ->dict:
 
 
 def _common_list_finder(init_dict:dict) ->dict:
-    dict_path = './esmira_components/dataset/dicts/common_ids.pkl'
+    dict_path = './predefined/esmira_components/dataset/dicts/common_ids.pkl'
     if os.path.isfile(dict_path):
         with open(dict_path, "rb") as tf:
             common_list = pickle.load(tf)
