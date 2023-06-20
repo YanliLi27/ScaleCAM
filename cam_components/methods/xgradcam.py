@@ -3,7 +3,7 @@ from cam_components.core.base_cam_analyzer import BaseCAM_A
 
 
 class XGradCAM_A(BaseCAM_A):
-    def __init__(self, model, target_layers, use_cuda=False,
+    def __init__(self, model, target_layers, num_out, use_cuda=False,
                  reshape_transform=None,compute_input_gradient=False,
                  uses_gradients=True):
         super(
@@ -11,6 +11,7 @@ class XGradCAM_A(BaseCAM_A):
             self).__init__(
             model,
             target_layers,
+            num_out, 
             use_cuda,
             reshape_transform,
             compute_input_gradient,

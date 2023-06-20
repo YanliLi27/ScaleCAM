@@ -12,6 +12,7 @@ class BaseCAM_P:
     def __init__(self,
                  model,
                  target_layers,
+                 num_out:int,
                  importance_matrix,
                  use_cuda:bool=False,
                  groups:int=2,
@@ -33,6 +34,7 @@ class BaseCAM_P:
             self.value_min = None
         self.model = model.eval()
         self.target_layers = target_layers
+        self.num_out = num_out  # if num_out=1 --> regression tasks, others --> classification
         self.cuda = use_cuda
         if self.cuda:
             self.model = model.cuda()
@@ -134,35 +136,40 @@ class BaseCAM_P:
 
     def _score_calculation(self, output, batch_size, gt=None, target_category=None):
         np_output = output.cpu().data.numpy()  # [batch*[2/1000]]
-        prob_predict_category = softmax(np_output, axis=-1)  # [batch*[2/1000 classes_normalized]]
-        predict_category = np.argmax(prob_predict_category, axis=-1)  # [batch*[1]]
-        if target_category is None:
-            target_category = predict_category
-            if self.out_logit:
-                pred_scores = np.max(np_output, axis=-1)
+        if self.num_out>1:
+            prob_predict_category = softmax(np_output, axis=-1)  # [batch*[2/1000 classes_normalized]]
+            predict_category = np.argmax(prob_predict_category, axis=-1)  # [batch*[1]]
+            if target_category is None:
+                target_category = predict_category
+                if self.out_logit:
+                    pred_scores = np.max(np_output, axis=-1)
+                    nega_scores = np.sum(np_output, axis=-1)
+                else:
+                    pred_scores = np.max(prob_predict_category, axis=-1)
+                    nega_scores = None
+            elif isinstance(target_category, int):
+                if self.out_logit:
+                    pred_scores = np_output[:, target_category]  # [batch*[2/1000]] -> [batch*1]
+                    nega_scores = np.sum(np_output, axis=-1) - pred_scores # [batch*2/1000] -> [batch*1] - [batch*1]
+                else:
+                    pred_scores = prob_predict_category[:, target_category]  # [batch*[2/1000]] -> [batch*1]
+                    nega_scores = None
+                target_category = [target_category] * batch_size
+                assert(len(target_category) == batch_size)
+            elif target_category == 'GT':
+                target_category = gt.to('cpu').data.numpy().astype(int)
+                matrix_zero = np.zeros([len(np_output), prob_predict_category.shape[-1]], dtype=np.int8)
+                matrix_zero[list(range(len(np_output))), target_category] = 1
+                pred_scores = np.max(matrix_zero* np_output, axis=-1)
                 nega_scores = np.sum(np_output, axis=-1)
             else:
-                pred_scores = np.max(prob_predict_category, axis=-1)
-                nega_scores = None
-        elif isinstance(target_category, int):
-            if self.out_logit:
-                pred_scores = np_output[:, target_category]  # [batch*[2/1000]] -> [batch*1]
-                nega_scores = np.sum(np_output, axis=-1) - pred_scores # [batch*2/1000] -> [batch*1] - [batch*1]
-            else:
-                pred_scores = prob_predict_category[:, target_category]  # [batch*[2/1000]] -> [batch*1]
-                nega_scores = None
-            target_category = [target_category] * batch_size
-            assert(len(target_category) == batch_size)
-        
-        elif target_category == 'GT':
-            target_category = gt.to('cpu').data.numpy().astype(int)
-            matrix_zero = np.zeros([len(np_output), prob_predict_category.shape[-1]], dtype=np.int8)
-            matrix_zero[list(range(len(np_output))), target_category] = 1
-            pred_scores = np.max(matrix_zero* np_output, axis=-1)
-            nega_scores = np.sum(np_output, axis=-1)
-        
+                raise ValueError('not valid target_category')
         else:
-            raise ValueError('not valid target_category')
+            prob_predict_category = np_output
+            predict_category = np.argmax(np_output, axis=-1)
+            pred_scores = np_output[:, predict_category]
+            nega_scores = None
+            target_category = predict_category
         
         return prob_predict_category, predict_category, pred_scores, nega_scores, target_category
 

@@ -11,6 +11,7 @@ class BaseCAM_A:
     def __init__(self,
                  model,
                  target_layers,
+                 num_out:int,
                  use_cuda=False,
                  reshape_transform=None,
                  compute_input_gradient=False,
@@ -18,6 +19,7 @@ class BaseCAM_A:
                  ):
         self.model = model.eval()
         self.target_layers = target_layers
+        self.num_out = num_out  # if num_out=1 --> regression tasks, others --> classification
         self.cuda = use_cuda
         if self.cuda:
             self.model = model.cuda()
@@ -113,13 +115,21 @@ class BaseCAM_A:
             target_category = [target_category] * input_tensor.size(0)
         
         np_output = output.cpu().data.numpy()
-        predict_category = np.argmax(np_output, axis=-1)
-        prob_predict_category = softmax(np_output, axis=-1)  # [batch*[2/1000 classes_normalized]]
-        if target_category is None:
-            target_category = predict_category
-            pred_scores = np.max(prob_predict_category, axis=-1)
+        
+        if self.num_out>1:
+            prob_predict_category = softmax(np_output, axis=-1)  # [batch*[2/1000 classes_normalized]]
+            predict_category = np.argmax(prob_predict_category, axis=-1)
+        else:
+            predict_category = np.argmax(np_output, axis=-1)
+        if target_category is None:  # if regression task, the target_category should be None
+            target_category = predict_category  # for regression --> [batch* 1(value=0)]
+            if self.num_out>1:
+                pred_scores = np.max(prob_predict_category, axis=-1)
+            else:
+                pred_scores = np_output
         else:
             assert(len(target_category) == input_tensor.size(0))
+            assert self.num_out>1
             matrix_zero = np.zeros([1, prob_predict_category.shape[-1]], dtype=np.int8)
             matrix_zero[0][target_category] = 1
             prob_predict_category = matrix_zero * prob_predict_category
