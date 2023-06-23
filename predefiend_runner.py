@@ -56,7 +56,7 @@ def naturalimage_runner(target_category:Union[None, int, str]=None, model_flag:s
                                     randomization=False, random_severity=0  # model randomization for sanity check
                                     )
                     Agent.analyzer_main()
-                    Agent.creator_main(eval_act='corr', mm_ratio=1.5, use_origin=use_origin)
+                    Agent.creator_main(eval_act='corr', mm_ratio=1.5, use_origin=use_origin, tanh_flag=True)
 
 
 def catsdog3d_runner(target_category:Union[None, int, str]=1, task:str='catsdogs3d', dataset_split:str='val'):    

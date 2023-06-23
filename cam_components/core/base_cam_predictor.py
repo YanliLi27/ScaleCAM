@@ -53,7 +53,7 @@ class BaseCAM_P:
         self.softamx = nn.Softmax(dim=1)
 
         self.tanh_flag = tanh_flag
-        if self.tanh_flag:
+        if self.tanh_flag and self.value_max:
             self.para_k = (np.arctanh(t_max) - np.arctanh(t_min))/(self.value_max-self.value_min)
             self.para_b = (np.arctanh(t_max)*self.value_min-np.arctanh(t_min)*self.value_max)/(self.value_min-self.value_max)
 

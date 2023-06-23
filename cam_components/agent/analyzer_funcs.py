@@ -33,8 +33,9 @@ def cam_stats_step(cam_algorithm, target_layers, # for the cam setting
         x = x.to(dtype=torch.float32).to(device)
         y = y.to(dtype=torch.float32).to(device)
         with cam_algorithm(model=model,
-                            target_layers=target_layers,
-                            use_cuda=True) as cam:
+                           num_out=num_classes,
+                           target_layers=target_layers,
+                           use_cuda=True) as cam:
             grayscale_cam, predict_category, confidence, cam_grad_max_value, cam_grad_min_value\
                                                                                     = cam(input_tensor=x, 
                                                                                         target_category=target_category,

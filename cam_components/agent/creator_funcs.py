@@ -13,7 +13,7 @@ from cam_components.agent.utils.scat_plot import scatter_plot
 from cam_components.agent.utils.eval_utils import cam_regularizer, cam_input_normalization, pred_score_calculator, text_save
 
 
-def cam_creator_step(cam_algorithm, model, target_layer, dataset, cam_dir,  # required attributes
+def cam_creator_step(cam_algorithm, model, target_layer, dataset, num_classes:int, cam_dir:str,  # required attributes
                     # --- optional functions --- #
                     im=None, data_max_value=None, data_min_value=None, remove_minus_flag:bool=True,
                     max_iter=None, set_mode:bool=True, use_origin:bool=True,
@@ -52,6 +52,7 @@ def cam_creator_step(cam_algorithm, model, target_layer, dataset, cam_dir,  # re
             
             with cam_algorithm(model=model,
                                 target_layers=target_layer,
+                                num_out=num_classes,
                                 importance_matrix=im,  # im -- [batch, organ_groups * channels] - [batch, 2 * N]
                                 use_cuda=True,
                                 groups=groups,

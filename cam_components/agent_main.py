@@ -123,7 +123,7 @@ class CAMAgent:
             data_max_value, data_min_value = None, None
         
         # step 3. pred step
-        cam_creator_step(self.cam_method[1], self.model, self.target_layer, self.dataset, self.cam_dir,  # required attributes
+        cam_creator_step(self.cam_method[1], self.model, self.target_layer, self.dataset, self.num_classes, self.cam_dir,  # required attributes
                         # optional function:
                         im=im, data_max_value=data_max_value, data_min_value=data_min_value, remove_minus_flag=self.remove_minus_flag,
                         max_iter=self.max_iter, use_origin=use_origin,
