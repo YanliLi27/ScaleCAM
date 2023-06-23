@@ -98,7 +98,7 @@ class CAMAgent:
                     self.im_path)
 
 
-    def creator_main(self, eval_act:str='false', mm_ratio:float=1.5, use_origin:bool=True):
+    def creator_main(self, eval_act:str='false', mm_ratio:float=1.5, use_origin:bool=True, tanh_flag:bool=False):
         '''
         mm_ratio for better visuaization
         use_origin for overlay/or not
@@ -129,7 +129,7 @@ class CAMAgent:
                         max_iter=self.max_iter, use_origin=use_origin,
                         batch_size=self.batch_size, groups=self.groups, target_category=self.target_category,
                         fold_order=self.fold_order,
-                        eval_func=eval_act
+                        eval_func=eval_act, tanh_flag=tanh_flag, t_max=0.95, t_min=0.05
                         )
 
 
