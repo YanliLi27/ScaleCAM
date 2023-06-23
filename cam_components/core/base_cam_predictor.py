@@ -12,6 +12,7 @@ class BaseCAM_P:
     def __init__(self,
                  model,
                  target_layers,
+                 num_out:int,
                  importance_matrix,
                  use_cuda:bool=False,
                  groups:int=2,
@@ -21,7 +22,10 @@ class BaseCAM_P:
                  value_max=None,
                  value_min=None,
                  remove_minus_flag:bool=False,
-                 out_logit:bool=False
+                 out_logit:bool=False,
+                 tanh_flag:bool=False,
+                 t_max:float=0.95,
+                 t_min:float=0.05
                  ):
         if value_max:
             self.value_max = value_max
@@ -33,6 +37,7 @@ class BaseCAM_P:
             self.value_min = None
         self.model = model.eval()
         self.target_layers = target_layers
+        self.num_out = num_out  # if num_out=1 --> regression tasks, others --> classification
         self.cuda = use_cuda
         if self.cuda:
             self.model = model.cuda()
@@ -46,6 +51,12 @@ class BaseCAM_P:
         self.activations_and_grads = ActivationsAndGradients(
             self.model, target_layers, reshape_transform)
         self.softamx = nn.Softmax(dim=1)
+
+        self.tanh_flag = tanh_flag
+        if self.tanh_flag and self.value_max:
+            self.para_k = (np.arctanh(t_max) - np.arctanh(t_min))/(self.value_max-self.value_min)
+            self.para_b = (np.arctanh(t_max)*self.value_min-np.arctanh(t_min)*self.value_max)/(self.value_min-self.value_max)
+
 
     """ Get a vector of weights for every channel in the target layer.
         Methods that return weights channels,
@@ -134,35 +145,40 @@ class BaseCAM_P:
 
     def _score_calculation(self, output, batch_size, gt=None, target_category=None):
         np_output = output.cpu().data.numpy()  # [batch*[2/1000]]
-        prob_predict_category = softmax(np_output, axis=-1)  # [batch*[2/1000 classes_normalized]]
-        predict_category = np.argmax(prob_predict_category, axis=-1)  # [batch*[1]]
-        if target_category is None:
-            target_category = predict_category
-            if self.out_logit:
-                pred_scores = np.max(np_output, axis=-1)
+        if self.num_out>1:
+            prob_predict_category = softmax(np_output, axis=-1)  # [batch*[2/1000 classes_normalized]]
+            predict_category = np.argmax(prob_predict_category, axis=-1)  # [batch*[1]]
+            if target_category is None:
+                target_category = predict_category
+                if self.out_logit:
+                    pred_scores = np.max(np_output, axis=-1)
+                    nega_scores = np.sum(np_output, axis=-1)
+                else:
+                    pred_scores = np.max(prob_predict_category, axis=-1)
+                    nega_scores = None
+            elif isinstance(target_category, int):
+                if self.out_logit:
+                    pred_scores = np_output[:, target_category]  # [batch*[2/1000]] -> [batch*1]
+                    nega_scores = np.sum(np_output, axis=-1) - pred_scores # [batch*2/1000] -> [batch*1] - [batch*1]
+                else:
+                    pred_scores = prob_predict_category[:, target_category]  # [batch*[2/1000]] -> [batch*1]
+                    nega_scores = None
+                target_category = [target_category] * batch_size
+                assert(len(target_category) == batch_size)
+            elif target_category == 'GT':
+                target_category = gt.to('cpu').data.numpy().astype(int)
+                matrix_zero = np.zeros([len(np_output), prob_predict_category.shape[-1]], dtype=np.int8)
+                matrix_zero[list(range(len(np_output))), target_category] = 1
+                pred_scores = np.max(matrix_zero* np_output, axis=-1)
                 nega_scores = np.sum(np_output, axis=-1)
             else:
-                pred_scores = np.max(prob_predict_category, axis=-1)
-                nega_scores = None
-        elif isinstance(target_category, int):
-            if self.out_logit:
-                pred_scores = np_output[:, target_category]  # [batch*[2/1000]] -> [batch*1]
-                nega_scores = np.sum(np_output, axis=-1) - pred_scores # [batch*2/1000] -> [batch*1] - [batch*1]
-            else:
-                pred_scores = prob_predict_category[:, target_category]  # [batch*[2/1000]] -> [batch*1]
-                nega_scores = None
-            target_category = [target_category] * batch_size
-            assert(len(target_category) == batch_size)
-        
-        elif target_category == 'GT':
-            target_category = gt.to('cpu').data.numpy().astype(int)
-            matrix_zero = np.zeros([len(np_output), prob_predict_category.shape[-1]], dtype=np.int8)
-            matrix_zero[list(range(len(np_output))), target_category] = 1
-            pred_scores = np.max(matrix_zero* np_output, axis=-1)
-            nega_scores = np.sum(np_output, axis=-1)
-        
+                raise ValueError('not valid target_category')
         else:
-            raise ValueError('not valid target_category')
+            prob_predict_category = np_output
+            predict_category = np.argmax(np_output, axis=-1)
+            pred_scores = np_output[:, predict_category]
+            nega_scores = None
+            target_category = predict_category
         
         return prob_predict_category, predict_category, pred_scores, nega_scores, target_category
 
@@ -194,6 +210,7 @@ class BaseCAM_P:
 
         return cam_per_layer, predict_category, pred_scores, nega_scores  # 由于batch=1，target_layers=1， [1, 1, groups, length, width]
 
+
     def get_target_width_height(self, input_tensor):
         if len(input_tensor.shape)==4:
             width, height = input_tensor.size(-2), input_tensor.size(-1)
@@ -203,6 +220,7 @@ class BaseCAM_P:
             return depth, width, height
         else:
             raise ValueError(f'NOT supported input_tensor shape {input_tensor.shape}')
+
 
     def compute_cam_per_layer(
             self,
@@ -234,7 +252,10 @@ class BaseCAM_P:
             if self.remove_minus_flag:
                 cam = np.maximum(cam, 0)
             for cam_item in cam:  # from cam[batch, groups, depth, length, width] to [groups, depth, length, width]
-                scaled = self.scale_cam_image(cam_item, target_size, prob_weights)  # 放缩不需要改变，不只是放缩比例，更重要的是进行了归一化
+                if self.tanh_flag:
+                    scaled = self.tanh_scale_cam_image(cam_item, target_size, prob_weights)
+                else:
+                    scaled = self.scale_cam_image(cam_item, target_size, prob_weights)  # 放缩不需要改变，不只是放缩比例，更重要的是进行了归一化
                 # print('max of scaled cam:', np.max(np.asarray(scaled)))
                 # print('min of scaled cam:', np.min(np.asarray(scaled)))
                 # scaled [groups, length, width] / 3D scaled [groups, depth, length, width]
@@ -248,12 +269,14 @@ class BaseCAM_P:
         # - list[(num_target_layer*batch)*array[groups, depth, length, width]]]
         # - 1*16(target_layers/batch) * array(2(groups), 512, 512) -- [16*array[2, 512, 512]]
 
+
     def _aggregate_multi_layers(self, cam_per_target_layer):  # 当target layer不止一层时采用平均的方式合成到一起
         # cam_per_target_layer -- [layers* [batch, groups, (depth), length, width]]
         cam_per_target_layer = np.concatenate(cam_per_target_layer, axis=(1, 2))  # axis=1是为了在list内越过batch那一维度
         # axis=(1,2) for skip batch and groups
         # [target_layers* (array[batch, all_channels])] --> []
         return np.mean(cam_per_target_layer, axis=(1, 2))
+
 
     def scale_cam_image(self, cam, target_size=None, prob_weights=1.0):
         result = []
@@ -290,6 +313,28 @@ class BaseCAM_P:
         result = np.float32(result)
 
         return result
+    
+
+    def tanh_scale_cam_image(self, cam, target_size=None, prob_weights=1.0):
+        result = []
+        # cam 2d[groups, length, width]/3d[groups, depth, length, width]  
+        # it's ok to have normalization inside each groups. -- but we need the prob_weights to fix it.
+        for img in cam:  # [length, width]/[depth, length, width]
+            img = np.tanh(self.para_k*img+self.para_b)
+            # print('max of img:', np.max(img))
+            # print('min of img:', np.min(img))
+            # img = img * prob_weights  # 根据置信度进行修正
+            if len(target_size) == 3: # 3d image
+                # do not use 'linear' which is only for 3-d tensor (1d vectors)
+                resize_fun = monai.transforms.Resize(target_size, mode='trilinear')  # receive image with shape c,z,y,x
+                img = resize_fun(img[None,:,:,:])[0]  # z,y,x
+                img = img.numpy()
+            else:
+                img = cv2.resize(img, target_size)  # for 2d image
+            result.append(img)
+        result = np.float32(result)
+        return result
+
 
     def __call__(self,
                  input_tensor,

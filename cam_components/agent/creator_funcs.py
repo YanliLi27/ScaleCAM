@@ -13,14 +13,14 @@ from cam_components.agent.utils.scat_plot import scatter_plot
 from cam_components.agent.utils.eval_utils import cam_regularizer, cam_input_normalization, pred_score_calculator, text_save
 
 
-def cam_creator_step(cam_algorithm, model, target_layer, dataset, cam_dir,  # required attributes
+def cam_creator_step(cam_algorithm, model, target_layer, dataset, num_classes:int, cam_dir:str,  # required attributes
                     # --- optional functions --- #
                     im=None, data_max_value=None, data_min_value=None, remove_minus_flag:bool=True,
                     max_iter=None, set_mode:bool=True, use_origin:bool=True,
                     batch_size:int=1, groups:int=1, target_category=None,
-                    fold_order:int=0, 
+                    fold_order:int=0,
                     # --- eval --- #
-                    eval_func:bool=False,
+                    eval_func:bool=False, tanh_flag:bool=False, t_max:float=0.95, t_min:float=0.05,
                     device=torch.device("cuda" if torch.cuda.is_available() else "cpu")):
     if set_mode:
         in_fold_counter = 0
@@ -52,6 +52,7 @@ def cam_creator_step(cam_algorithm, model, target_layer, dataset, cam_dir,  # re
             
             with cam_algorithm(model=model,
                                 target_layers=target_layer,
+                                num_out=num_classes,
                                 importance_matrix=im,  # im -- [batch, organ_groups * channels] - [batch, 2 * N]
                                 use_cuda=True,
                                 groups=groups,
@@ -59,6 +60,9 @@ def cam_creator_step(cam_algorithm, model, target_layer, dataset, cam_dir,  # re
                                 value_min=data_min_value,
                                 remove_minus_flag=remove_minus_flag,
                                 out_logit=False,
+                                tanh_flag=tanh_flag,
+                                t_max=t_max,
+                                t_min=t_min
                                 ) as cam:
 
                 grayscale_cam, predict_category, pred_score, nega_score = cam(input_tensor=x,
@@ -113,6 +117,10 @@ def cam_creator_step(cam_algorithm, model, target_layer, dataset, cam_dir,  # re
                 # --------------------------------------  cam evaluate  -------------------------------------- #
                 if eval_func == 'corr':
                     grayscale_cam = np.array(grayscale_cam)  # # grayscale_cam -- 16 * [1, 256, 256] - batch * [1, 256, 256]
+                    if tanh_flag and im:
+                        para_k = (np.arctanh(t_max) - np.arctanh(t_min))/(data_max_value-data_min_value)
+                        para_b = (np.arctanh(t_max)*data_min_value-np.arctanh(t_min)*data_max_value)/(data_min_value-data_max_value)
+                        grayscale_cam = (np.arctanh(grayscale_cam) - para_b)/para_k
                     # 3d grayscale cam -- 16 * [1, 5, 256, 256] - batch * [1, 5, 256, 256]
                     # batch_size * [group_num, (z,) y, x]
                     for i, single_cam in enumerate(grayscale_cam):  # 取单个进行计算和存储
