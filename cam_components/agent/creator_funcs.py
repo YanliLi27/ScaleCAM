@@ -117,7 +117,7 @@ def cam_creator_step(cam_algorithm, model, target_layer, dataset, num_classes:in
                 # --------------------------------------  cam evaluate  -------------------------------------- #
                 if eval_func == 'corr':
                     grayscale_cam = np.array(grayscale_cam)  # # grayscale_cam -- 16 * [1, 256, 256] - batch * [1, 256, 256]
-                    if tanh_flag and im:
+                    if tanh_flag and data_max_value:
                         para_k = (np.arctanh(t_max) - np.arctanh(t_min))/(data_max_value-data_min_value)
                         para_b = (np.arctanh(t_max)*data_min_value-np.arctanh(t_min)*data_max_value)/(data_min_value-data_max_value)
                         grayscale_cam = (np.arctanh(grayscale_cam) - para_b)/para_k

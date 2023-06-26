@@ -107,7 +107,7 @@ def catsdog3d_runner(target_category:Union[None, int, str]=1, task:str='catsdogs
                                     randomization=False, random_severity=0  # model randomization for sanity check
                                     )
                     Agent.analyzer_main()
-                    Agent.creator_main(eval_act='corr', mm_ratio=1.5, use_origin=use_origin)
+                    Agent.creator_main(eval_act='corr', mm_ratio=1.5, use_origin=use_origin, tanh_flag=True)
     
 
 def medical_runner(target_category:Union[None, int, str]=1, task:str='luna', dataset_split:str='val'):
@@ -211,7 +211,7 @@ def esmira_runner(target_category:Union[None, int, str]=1, data_dir:str='D:\\ESM
 
 
         # -------------------------------- start loop -------------------------------- #
-        cam_method_zoo = ['fullcam', 'gradcam', 'gradcampp', 'xgradcam']
+        cam_method_zoo = ['gradcam', 'fullcam', 'gradcampp', 'xgradcam']
         maxmin_flag_zoo = [True, False]  # intensity scaling
         remove_minus_flag_zoo = [False, True]  # remove the part below zero, default: True in the original Grad CAM
         im_selection_mode_zoo = ['all', 'diff_top']  # use feature selection or not -- relied on the importance matrices
@@ -220,6 +220,10 @@ def esmira_runner(target_category:Union[None, int, str]=1, data_dir:str='D:\\ESM
             for im in im_selection_mode_zoo:
                 for mm in maxmin_flag_zoo:
                     for rm in remove_minus_flag_zoo:
+                        if mm:
+                            tanh_flag = True
+                        else:
+                            tanh_flag = False
                         Agent = CAMAgent(model, target_layer, dataset,  
                                         num_out_channel, num_classes,  
                                         groups, fold_order,  
@@ -232,4 +236,4 @@ def esmira_runner(target_category:Union[None, int, str]=1, data_dir:str='D:\\ESM
                                         randomization=False, random_severity=0  # model randomization for sanity check
                                         )
                         Agent.analyzer_main()
-                        Agent.creator_main(eval_act='corr', mm_ratio=1.5, use_origin=True)
+                        Agent.creator_main(eval_act='corr', mm_ratio=2, use_origin=True, tanh_flag=tanh_flag)

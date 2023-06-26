@@ -56,6 +56,9 @@ class BaseCAM_P:
         if self.tanh_flag and self.value_max:
             self.para_k = (np.arctanh(t_max) - np.arctanh(t_min))/(self.value_max-self.value_min)
             self.para_b = (np.arctanh(t_max)*self.value_min-np.arctanh(t_min)*self.value_max)/(self.value_min-self.value_max)
+        else:
+            self.para_k = None
+            self.para_b = None
 
 
     """ Get a vector of weights for every channel in the target layer.
@@ -252,10 +255,11 @@ class BaseCAM_P:
             if self.remove_minus_flag:
                 cam = np.maximum(cam, 0)
             for cam_item in cam:  # from cam[batch, groups, depth, length, width] to [groups, depth, length, width]
-                if self.tanh_flag:
+                if self.tanh_flag and self.para_k:
                     scaled = self.tanh_scale_cam_image(cam_item, target_size, prob_weights)
                 else:
-                    scaled = self.scale_cam_image(cam_item, target_size, prob_weights)  # 放缩不需要改变，不只是放缩比例，更重要的是进行了归一化
+                    scaled = self.scale_cam_image(cam_item, target_size, prob_weights)
+                # 放缩不需要改变，不只是放缩比例，更重要的是进行了归一化
                 # print('max of scaled cam:', np.max(np.asarray(scaled)))
                 # print('min of scaled cam:', np.min(np.asarray(scaled)))
                 # scaled [groups, length, width] / 3D scaled [groups, depth, length, width]
