@@ -120,19 +120,11 @@ class BaseCAM_A:
             predict_category = np.argmax(prob_predict_category, axis=-1)  # [batch*[1]]  # 预测类取最大
             if target_category is None:
                 target_category = predict_category
-                if self.out_logit:
-                    pred_scores = np.max(np_output, axis=-1)
-                    nega_scores = np.sum(np_output, axis=-1)
-                else:
-                    pred_scores = np.max(prob_predict_category, axis=-1)
-                    nega_scores = None
+                pred_scores = np.max(prob_predict_category, axis=-1)
+                nega_scores = None
             elif isinstance(target_category, int):
-                if self.out_logit:
-                    pred_scores = np_output[:, target_category]  # [batch*[2/1000]] -> [batch*1]
-                    nega_scores = np.sum(np_output, axis=-1) - pred_scores # [batch*2/1000] -> [batch*1] - [batch*1]
-                else:
-                    pred_scores = prob_predict_category[:, target_category]  # [batch*[2/1000]] -> [batch*1]
-                    nega_scores = None
+                pred_scores = prob_predict_category[:, target_category]  # [batch*[2/1000]] -> [batch*1]
+                nega_scores = None
                 target_category = [target_category] * batch_size
                 assert(len(target_category) == batch_size)
             else:
