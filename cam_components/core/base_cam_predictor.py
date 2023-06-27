@@ -76,7 +76,9 @@ class BaseCAM_P:
 
     def get_loss(self, output, target_category):
         loss = 0
-        for i in range(len(target_category)):
+        if len(output.shape) == 1:  # for regression with only one output
+            return output[target_category]
+        for i in range(len(target_category)):  # for classification with different output
             loss = loss + output[i, target_category[i]]
         return loss
 
