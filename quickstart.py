@@ -31,11 +31,12 @@ if __name__ == '__main__':
     max_iter=None  # early stop
     randomization:bool=False
     random_severity:int=1  # model randomization for sanity check
+    ram:bool=False # for regression tasks, supported for multi-output
     # -------------------------------- optional end -------------------------------- #
 
     Agent = CAMAgent(model, target_layer, dataset,  
                 num_out_channel, num_classes,  
-                groups, fold_order,  
+                groups, fold_order, ram,  
                 # optional:
                 cam_method, im_dir, cam_dir, # cam method and im paths and cam output
                 batch_size, target_category,  # info of the running process

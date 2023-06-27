@@ -11,7 +11,7 @@ class BaseCAM_A:
     def __init__(self,
                  model,
                  target_layers,
-                 num_out:int,
+                 ram:bool,
                  use_cuda=False,
                  reshape_transform=None,
                  compute_input_gradient=False,
@@ -19,7 +19,7 @@ class BaseCAM_A:
                  ):
         self.model = model.eval()
         self.target_layers = target_layers
-        self.num_out = num_out  # if num_out=1 --> regression tasks, others --> classification
+        self.ram = ram  # if num_out=1 --> regression tasks, others --> classification
         self.cuda = use_cuda
         if self.cuda:
             self.model = model.cuda()
@@ -102,6 +102,45 @@ class BaseCAM_A:
 
         return cam, cam_grad_max_value, cam_grad_min_value  # cam [batch, all_channels]
 
+
+    def _score_calculation(self, output, batch_size, target_category=None):
+        np_output = output.cpu().data.numpy()  # [batch*[2/1000]]
+        if self.ram:
+            if target_category is None:
+                target_category = 0
+            assert isinstance(target_category, int)
+            prob_predict_category = np_output[:, target_category]  # 
+            predict_category = target_category
+            pred_scores = np_output[:, target_category]
+            nega_scores = None
+            target_category = [target_category] * batch_size
+            return prob_predict_category, predict_category, pred_scores, nega_scores, target_category
+        else:
+            prob_predict_category = softmax(np_output, axis=-1)  # [batch*[2/1000 classes_normalized]]  # softmax进行平衡
+            predict_category = np.argmax(prob_predict_category, axis=-1)  # [batch*[1]]  # 预测类取最大
+            if target_category is None:
+                target_category = predict_category
+                if self.out_logit:
+                    pred_scores = np.max(np_output, axis=-1)
+                    nega_scores = np.sum(np_output, axis=-1)
+                else:
+                    pred_scores = np.max(prob_predict_category, axis=-1)
+                    nega_scores = None
+            elif isinstance(target_category, int):
+                if self.out_logit:
+                    pred_scores = np_output[:, target_category]  # [batch*[2/1000]] -> [batch*1]
+                    nega_scores = np.sum(np_output, axis=-1) - pred_scores # [batch*2/1000] -> [batch*1] - [batch*1]
+                else:
+                    pred_scores = prob_predict_category[:, target_category]  # [batch*[2/1000]] -> [batch*1]
+                    nega_scores = None
+                target_category = [target_category] * batch_size
+                assert(len(target_category) == batch_size)
+            else:
+                raise ValueError('not valid target_category')
+        
+        return prob_predict_category, predict_category, pred_scores, nega_scores, target_category
+
+
     def forward(self, input_tensor, target_category=None):
         if self.cuda:
             input_tensor = input_tensor.cuda()
@@ -111,29 +150,10 @@ class BaseCAM_A:
                                                    requires_grad=True)
 
         output = self.activations_and_grads(input_tensor)
-        if isinstance(target_category, int):
-            target_category = [target_category] * input_tensor.size(0)
         
-        np_output = output.cpu().data.numpy()
-        
-        if self.num_out>1:
-            prob_predict_category = softmax(np_output, axis=-1)  # [batch*[2/1000 classes_normalized]]
-            predict_category = np.argmax(prob_predict_category, axis=-1)
-        else:
-            predict_category = np.argmax(np_output, axis=-1)
-        if target_category is None:  # if regression task, the target_category should be None
-            target_category = predict_category  # for regression --> [batch* 1(value=0)]
-            if self.num_out>1:
-                pred_scores = np.max(prob_predict_category, axis=-1)
-            else:
-                pred_scores = np_output
-        else:
-            assert(len(target_category) == input_tensor.size(0))
-            assert self.num_out>1
-            matrix_zero = np.zeros([1, prob_predict_category.shape[-1]], dtype=np.int8)
-            matrix_zero[0][target_category] = 1
-            prob_predict_category = matrix_zero * prob_predict_category
-            pred_scores = np.max(prob_predict_category, axis=-1)
+        _, predict_category, pred_scores, _, target_category =\
+            self._score_calculation(output, input_tensor.size(0), target_category)
+            
 
         if self.uses_gradients:
             self.model.zero_grad()

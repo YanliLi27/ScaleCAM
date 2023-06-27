@@ -14,6 +14,7 @@ def naturalimage_runner(target_category:Union[None, int, str]=None, model_flag:s
     im_selection_extra:float=0.05  # importance matrices attributes
     max_iter=max_iter  # early stop
     groups:int=1
+    ram:bool=False  # if it's a regression task
     # -------------------------------- optional end -------------------------------- #
     assert task in ['CatsDogs', 'MNIST', 'Imagenet']
     assert model_flag in ['vgg', 'resnet', 'scratch', 'scratch_mnist']
@@ -46,7 +47,7 @@ def naturalimage_runner(target_category:Union[None, int, str]=None, model_flag:s
                 for rm in remove_minus_flag_zoo:
                     Agent = CAMAgent(model, target_layer, dataset,  
                                     num_out_channel, num_classes,  
-                                    groups, fold_order,  
+                                    groups, fold_order, ram,
                                     # optional:
                                     cam_method=method, im_dir=im_dir, cam_dir=cam_dir, # cam method and im paths and cam output
                                     batch_size=batch_size, target_category=target_category,  # info of the running process
@@ -67,6 +68,7 @@ def catsdog3d_runner(target_category:Union[None, int, str]=1, task:str='catsdogs
     im_selection_extra:float=0.05  # importance matrices attributes
     max_iter=None  # early stop
     groups:int=1
+    ram:bool=False  # if it's a regression task
     # -------------------------------- optional end -------------------------------- #
 
 
@@ -97,7 +99,7 @@ def catsdog3d_runner(target_category:Union[None, int, str]=1, task:str='catsdogs
                 for rm in remove_minus_flag_zoo:
                     Agent = CAMAgent(model, target_layer, dataset,  
                                     num_out_channel, num_classes,  
-                                    groups, fold_order,  
+                                    groups, fold_order, ram,
                                     # optional:
                                     cam_method=method, im_dir=im_dir, cam_dir=cam_dir, # cam method and im paths and cam output
                                     batch_size=batch_size, target_category=target_category,  # info of the running process
@@ -118,6 +120,7 @@ def medical_runner(target_category:Union[None, int, str]=1, task:str='luna', dat
     im_selection_extra:float=0.05  # importance matrices attributes
     max_iter=None  # early stop
     groups:int=1  # no group convolution here
+    ram:bool=False  # if it's a regression task
     # -------------------------------- optional end -------------------------------- #
     assert task in ['luna', 'rsna', 'siim', 'us', 'ddsm' ]
 
@@ -148,7 +151,7 @@ def medical_runner(target_category:Union[None, int, str]=1, task:str='luna', dat
                     for rm in remove_minus_flag_zoo:
                         Agent = CAMAgent(model, target_layer, dataset,  
                                         num_out_channel, num_classes,  
-                                        groups, fold_order,  
+                                        groups, fold_order, ram,
                                         # optional:
                                         cam_method=method, im_dir=im_dir, cam_dir=cam_dir, # cam method and im paths and cam output
                                         batch_size=batch_size, target_category=target_category,  # info of the running process
@@ -170,6 +173,7 @@ def esmira_runner(target_category:Union[None, int, str]=1, data_dir:str='D:\\ESM
     im_selection_extra:float=0.05  # importance matrices attributes
     max_iter=None  # early stop
     groups:int=len(target_dirc) * len(target_site)
+    ram:bool=False  # if it's a regression task
     # -------------------------------- optional end -------------------------------- #
 
     # information needed:
@@ -226,7 +230,7 @@ def esmira_runner(target_category:Union[None, int, str]=1, data_dir:str='D:\\ESM
                             tanh_flag = False
                         Agent = CAMAgent(model, target_layer, dataset,  
                                         num_out_channel, num_classes,  
-                                        groups, fold_order,  
+                                        groups, fold_order, ram,
                                         # optional:
                                         cam_method=method, im_dir=im_dir, cam_dir=cam_dir, # cam method and im paths and cam output
                                         batch_size=batch_size, target_category=target_category,  # info of the running process

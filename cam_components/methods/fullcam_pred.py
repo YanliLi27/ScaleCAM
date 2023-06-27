@@ -3,7 +3,7 @@ from cam_components.core.base_cam_predictor import BaseCAM_P
 
 
 class FullCAM_P(BaseCAM_P):
-    def __init__(self, model, target_layers, num_out, importance_matrix, use_cuda=False, groups=1,
+    def __init__(self, model, target_layers, ram, importance_matrix, use_cuda=False, groups=1,
                  reshape_transform=None, compute_input_gradient=False, uses_gradients=True,
                  value_max=None, value_min=None, remove_minus_flag=False, out_logit=False,
                  tanh_flag:bool=False, t_max:float=0.95, t_min:float=0.05):
@@ -12,7 +12,7 @@ class FullCAM_P(BaseCAM_P):
             self).__init__(
             model,
             target_layers,
-            num_out,
+            ram,
             importance_matrix,
             use_cuda,
             groups,

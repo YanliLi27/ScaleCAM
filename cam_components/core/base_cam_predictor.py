@@ -12,8 +12,8 @@ class BaseCAM_P:
     def __init__(self,
                  model,
                  target_layers,
-                 num_out:int,
-                 importance_matrix,
+                 ram:bool,
+                 importance_matrix=None,
                  use_cuda:bool=False,
                  groups:int=2,
                  reshape_transform=None,
@@ -37,7 +37,7 @@ class BaseCAM_P:
             self.value_min = None
         self.model = model.eval()
         self.target_layers = target_layers
-        self.num_out = num_out  # if num_out=1 --> regression tasks, others --> classification
+        self.ram = ram  # if num_out=1 --> regression tasks, others --> classification
         self.cuda = use_cuda
         if self.cuda:
             self.model = model.cuda()
@@ -150,9 +150,19 @@ class BaseCAM_P:
 
     def _score_calculation(self, output, batch_size, gt=None, target_category=None):
         np_output = output.cpu().data.numpy()  # [batch*[2/1000]]
-        if self.num_out>1:
-            prob_predict_category = softmax(np_output, axis=-1)  # [batch*[2/1000 classes_normalized]]
-            predict_category = np.argmax(prob_predict_category, axis=-1)  # [batch*[1]]
+        if self.ram:
+            if target_category is None:
+                target_category = 0
+            assert isinstance(target_category, int)
+            prob_predict_category = np_output[:, target_category]  # 
+            predict_category = target_category
+            pred_scores = np_output[:, target_category]
+            nega_scores = None
+            target_category = [target_category] * batch_size
+            return prob_predict_category, predict_category, pred_scores, nega_scores, target_category
+        else:
+            prob_predict_category = softmax(np_output, axis=-1)  # [batch*[2/1000 classes_normalized]]  # softmax进行平衡
+            predict_category = np.argmax(prob_predict_category, axis=-1)  # [batch*[1]]  # 预测类取最大
             if target_category is None:
                 target_category = predict_category
                 if self.out_logit:
@@ -178,12 +188,6 @@ class BaseCAM_P:
                 nega_scores = np.sum(np_output, axis=-1)
             else:
                 raise ValueError('not valid target_category')
-        else:
-            prob_predict_category = np_output
-            predict_category = np.argmax(np_output, axis=-1)
-            pred_scores = np_output[:, predict_category]
-            nega_scores = None
-            target_category = predict_category
         
         return prob_predict_category, predict_category, pred_scores, nega_scores, target_category
 

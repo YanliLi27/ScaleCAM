@@ -11,16 +11,17 @@ from sklearn.metrics import roc_auc_score
 from scipy import stats
 from cam_components.agent.utils.scat_plot import scatter_plot
 from cam_components.agent.utils.eval_utils import cam_regularizer, cam_input_normalization, pred_score_calculator, text_save
+from typing import Union
 
 
-def cam_creator_step(cam_algorithm, model, target_layer, dataset, num_classes:int, cam_dir:str,  # required attributes
+def cam_creator_step(cam_algorithm, model, target_layer, dataset, ram:bool, cam_dir:str,  # required attributes
                     # --- optional functions --- #
                     im=None, data_max_value=None, data_min_value=None, remove_minus_flag:bool=True,
                     max_iter=None, set_mode:bool=True, use_origin:bool=True,
                     batch_size:int=1, groups:int=1, target_category=None,
-                    fold_order:int=0,
+                    fold_order:int=0, backup_flag:bool=False,
                     # --- eval --- #
-                    eval_func:bool=False, tanh_flag:bool=False, t_max:float=0.95, t_min:float=0.05,
+                    eval_func:Union[bool, str]=False, tanh_flag:bool=False, t_max:float=0.95, t_min:float=0.05,
                     device=torch.device("cuda" if torch.cuda.is_available() else "cpu")):
     if set_mode:
         in_fold_counter = 0
@@ -29,7 +30,7 @@ def cam_creator_step(cam_algorithm, model, target_layer, dataset, num_classes:in
 
         # --- eval --- #
         counter = 0
-        assert eval_func in ['false', 'basic', 'logit', 'corr']
+        assert eval_func in [False, 'false', 'basic', 'logit', 'corr']
         if eval_func == 'corr':
             corr_cam_matrix = []
             corr_cate_matrix = []
@@ -52,7 +53,7 @@ def cam_creator_step(cam_algorithm, model, target_layer, dataset, num_classes:in
             
             with cam_algorithm(model=model,
                                 target_layers=target_layer,
-                                num_out=num_classes,
+                                ram=ram,
                                 importance_matrix=im,  # im -- [batch, organ_groups * channels] - [batch, 2 * N]
                                 use_cuda=True,
                                 groups=groups,
@@ -74,6 +75,11 @@ def cam_creator_step(cam_algorithm, model, target_layer, dataset, num_classes:in
                 # ---------------------------------------  cam create  --------------------------------------- #
                 if not os.path.exists(cam_dir):
                     os.makedirs(cam_dir)
+                if backup_flag:
+                    backup_dir = cam_dir.replace('./output/cam/', './output/figs/')
+                    if not os.path.exists(backup_dir):
+                        os.makedirs(backup_dir)
+                # step
                 for i in range(batch_size):
                     # for 2D input
                     if len(grayscale_cam[i].shape) == 3:
@@ -85,6 +91,13 @@ def cam_creator_step(cam_algorithm, model, target_layer, dataset, num_classes:in
                         save_name = os.path.join(cam_dir, f'fold{fold_order}_tr{str_labels}pr{output_label}_{in_fold_counter}_cf{cf_num}.jpg')
                         in_fold_counter += 1
                         cv2.imwrite(save_name, concat_img_all)
+
+                        # save the backup npy for further calculation
+                        if backup_flag:
+                            backup_name = os.path.join(backup_dir, f'fold{fold_order}_tr{str_labels}pr{output_label}_{in_fold_counter}_cf{cf_num}.npy')
+                            np.save(backup_name, np.asarray({'img':origin_img[i],'cam':grayscale_cam[i]}))
+                            # grayscale_cam [-batch- * [1(groups), 256, 256]]
+                            # origin_img [-batch-, organ_groups, channel=3, y, x]
 
                     # for 3D input
                     elif len(grayscale_cam[i].shape) == 4:
@@ -101,10 +114,10 @@ def cam_creator_step(cam_algorithm, model, target_layer, dataset, num_classes:in
                         in_fold_counter += 1
     
                         # TODO from [batch, organ_groups, z, y, x, channel] to [batch, organ_groups, channel, z, y, x]
-                        # current we just use the second layer of input
+                        # currently we just use the second layer of input
                         for group_index in range(origin_img.shape[1]):
-                            save_name = save_name.replace('.nii.gz', '_p1.nii.gz')
-                            origin_save_name = origin_save_name.replace('.nii.gz', '_p1.nii.gz')
+                            save_name = save_name.replace('.nii.gz', '_p{}.nii.gz'.format(group_index))
+                            origin_save_name = origin_save_name.replace('.nii.gz', '_p{}.nii.gz'.format(group_index))
                             writter = sitk.ImageFileWriter()
                             writter.SetFileName(save_name)
                             writter.Execute(sitk.GetImageFromArray(grayscale_cam[i][group_index]))
@@ -173,6 +186,8 @@ def cam_creator_step(cam_algorithm, model, target_layer, dataset, num_classes:in
             auc = roc_auc_score(corr_cate_matrix, corr_cam_matrix)
             print('outlier rate-- AUROC of <CAM & Label>: ', auc)
             corr_dir = cam_dir.replace('./output/cam/', './output/figs/')
+            if not os.path.exists(corr_dir):
+                os.makedirs(corr_dir)
             save_name = os.path.join(corr_dir, f'or_scatter_{str(auc)[:5]}.jpg')
             scatter_plot(corr_cate_matrix, corr_cam_matrix, fit=False, save_path=save_name)
             print(f'or scatter plot saved: {save_name}')
@@ -193,6 +208,9 @@ def cam_creator_step(cam_algorithm, model, target_layer, dataset, num_classes:in
 
             print('increase:', avg_increase)
             print('avg_drop:', avg_drop)
+            corr_dir = cam_dir.replace('./output/cam/', './output/figs/')
+            if not os.path.exists(corr_dir):
+                os.makedirs(corr_dir)
             eval_borl_save_name = os.path.join(corr_dir, f'eval_with_{eval_func}.txt')
             text_save(eval_borl_save_name, avg_increase, avg_drop, counter)
         # --------------------------------------  cam evaluate  -------------------------------------- #

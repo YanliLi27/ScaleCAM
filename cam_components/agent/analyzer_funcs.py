@@ -13,6 +13,7 @@ def stat_calculator(cam_grad_max_matrix, cam_grad_min_matrix):
 def cam_stats_step(cam_algorithm, target_layers, # for the cam setting
                     model, dataset, num_out_channel:int, num_classes:int=2,  # for the model and dataset
                     target_category=1, # the target category for cam
+                    ram:bool=False,
                     batch_size:int=1,
                     confidence_weight_flag:bool=False,  # if prefer to weight the importance with confidence
                     device=torch.device("cuda" if torch.cuda.is_available() else "cpu")):
@@ -33,7 +34,7 @@ def cam_stats_step(cam_algorithm, target_layers, # for the cam setting
         x = x.to(dtype=torch.float32).to(device)
         y = y.to(dtype=torch.float32).to(device)
         with cam_algorithm(model=model,
-                           num_out=num_classes,
+                           ram=ram,
                            target_layers=target_layers,
                            use_cuda=True) as cam:
             grayscale_cam, predict_category, confidence, cam_grad_max_value, cam_grad_min_value\
