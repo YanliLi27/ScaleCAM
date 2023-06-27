@@ -306,7 +306,7 @@ def ramris_pred_runner(data_dir='', target_category=['EAC'],
 
         # --------------------------------------- im --------------------------------------- #
         num_out_channel = 256 * groups
-        num_classes = 2
+        num_classes = out_ch
         im_dir = './output/im/RAMRIS_{}'.format(weight_path.replace('.model', ''))
         if not os.path.exists(im_dir):
             os.makedirs(im_dir)

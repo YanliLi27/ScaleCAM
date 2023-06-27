@@ -47,6 +47,9 @@ class CAMAgent:
         self.num_classes = num_classes
         self.dataset = dataset
         self.ram = ram
+        if self.ram:
+            print('please notice, for regression tasks, the target categories is necessary, for both analyzer and creator.\
+                  if no predefined category, the default is 0.')
 
         assert (target_category in ['GT', None] or type(target_category) == int)
         self.target_category = target_category  # targeted category
