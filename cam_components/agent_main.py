@@ -1,6 +1,6 @@
 import os
 import cv2
-import tqdm
+from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
 from typing import Union
@@ -317,7 +317,7 @@ class CAMAgent:
             if not os.path.exists(cam_dir):
                 os.makedirs(cam_dir)
             if backup_flag:
-                backup_dir = cam_dir.replace('./output/cam/', './output/figs/')
+                backup_dir = cam_dir.replace('./output/cam/', './output/backup/')
                 if not os.path.exists(backup_dir):
                     os.makedirs(backup_dir)
             # step
@@ -436,7 +436,7 @@ class CAMAgent:
                 if not os.path.exists(cam_dir):
                     os.makedirs(cam_dir)
                 if backup_flag:
-                    backup_dir = cam_dir.replace('./output/cam/', './output/figs/')
+                    backup_dir = cam_dir.replace('./output/cam/', './output/backup/')
                     if not os.path.exists(backup_dir):
                         os.makedirs(backup_dir)
                 # step
