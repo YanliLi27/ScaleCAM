@@ -106,8 +106,8 @@ class BaseCAM_A:
     def _score_calculation(self, output, batch_size, target_category=None):
         np_output = output.cpu().data.numpy()  # [batch*[2/1000]]
         if self.ram:
-            if target_category is None:
-                target_category = 0
+            if (target_category is None) or (target_category=='GT'):
+                target_category = 0  # for regression, the target_category should be given
             assert isinstance(target_category, int)
             prob_predict_category = np_output[:, target_category]  # 
             predict_category = target_category
@@ -118,7 +118,7 @@ class BaseCAM_A:
         else:
             prob_predict_category = softmax(np_output, axis=-1)  # [batch*[2/1000 classes_normalized]]  # softmax进行平衡
             predict_category = np.argmax(prob_predict_category, axis=-1)  # [batch*[1]]  # 预测类取最大
-            if target_category is None:
+            if (target_category is None) or (target_category=='GT'):
                 target_category = predict_category
                 pred_scores = np.max(prob_predict_category, axis=-1)
                 nega_scores = None

@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import cv2
-from cam_components.agent.utils.image import show_cam_on_image
+from cam_components.agent.image import show_cam_on_image
 
 
 def origin_creator(img:torch.Tensor, organ_groups:int=1):

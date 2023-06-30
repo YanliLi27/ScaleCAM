@@ -1,4 +1,3 @@
-from msilib.schema import Feature
 import numpy as np
 
 
