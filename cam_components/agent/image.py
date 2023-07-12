@@ -22,7 +22,10 @@ def show_cam_on_image(img: np.ndarray,
     """
     mask = np.maximum(mask, 0)
     mask = np.minimum(mask, 1)
-    heatmap = cv2.applyColorMap(np.uint8(255 * mask), colormap)
+    if len(mask.shape) > 2:
+        heatmap = np.uint8(255 * mask)
+    else:
+        heatmap = cv2.applyColorMap(np.uint8(255 * mask), colormap)
     if use_rgb:
         heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
     # heatmap = np.float32(heatmap) / 255
