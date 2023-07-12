@@ -4,7 +4,7 @@ from predefiend_runner import naturalimage_runner, catsdog3d_runner, esmira_runn
 if __name__ == '__main__':
     # for test
     naturalimage_runner(target_category=[0, 1], model_flag='vgg', task='CatsDogs', dataset_split='val',
-                        max_iter=None, randomization=False, random_severity=0)
+                        max_iter=50, randomization=False, random_severity=0)
     # catsdog3d_runner(target_category=1, task='catsdogs3d', dataset_split='val')
     # medical_runner(target_category=1, task='luna', dataset_split='val')
     # esmira_runner(target_category=1, data_dir='D:\\ESMIRA\\ESMIRA_common',
