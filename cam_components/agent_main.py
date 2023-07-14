@@ -247,7 +247,9 @@ class CAMAgent:
                                 use_origin:bool=True,
                                 backup_flag:bool=False,
                                 # --- eval --- #
-                                tanh_flag:bool=False, cluster:Union[None, str, list]=None, t_max:float=0.95, t_min:float=0.05,
+                                tanh_flag:bool=False, 
+                                cluster:Union[None, str, list]=None, cluster_start:int=0,
+                                t_max:float=0.95, t_min:float=0.05,
                                 device=torch.device("cuda" if torch.cuda.is_available() else "cpu")):
         
         # get importance matrices for each category
@@ -328,7 +330,7 @@ class CAMAgent:
             # step
             # cluster for the multi-target CAM generation -- e.g. SYN/TSY/BME
             if type(cluster)==list:
-                assert np.sum(cluster)==len(self.target_category)  # make sure the length equal
+                assert np.sum(cluster)<=len(self.target_category)  # make sure the length equal
                 assert len(cluster)<=3  # only 3 channels for RGB
                 # tc_cam for cluster -- [tc]
                 tc_cam = np.asarray(tc_cam)
@@ -344,7 +346,7 @@ class CAMAgent:
                     clustered_cam = np.zeros((B,G,3,D,W,L))
                 else:
                     raise ValueError(f'The shape for width-first CAM of {tc_cam.shape} is not supported')
-                cluster_counter = 0
+                cluster_counter = cluster_start
                 for i in range(len(cluster)):
                     clustered_cam[:, :, i] = np.sum(tc_cam[:, :, cluster_counter:cluster_counter+cluster[i]], axis=2)
                     cluster_counter+=cluster[i]
