@@ -210,14 +210,15 @@ class CAMAgent:
 
 
     def creator_main(self, eval_act:Union[bool, str]=False, mm_ratio:float=1.5, use_origin:bool=True,
-                      cluster:Union[None, str, list]=None, tanh_flag:bool=False, backup_flag:bool=False):
+                    cluster:Union[None, str, list]=None, cluster_start:int=0,
+                    tanh_flag:bool=False, backup_flag:bool=False):
         '''
         mm_ratio for better visuaization
         use_origin for overlay/or not
         '''
         # step 3. pred step
         if type(self.target_category)==list:
-            self._cam_creator_step_width(self.target_layer, mm_ratio, use_origin, backup_flag, tanh_flag, cluster)
+            self._cam_creator_step_width(self.target_layer, mm_ratio, use_origin, backup_flag, tanh_flag, cluster, cluster_start)
         else:
             self._cam_creator_step_depth(self.target_layer, mm_ratio, use_origin, backup_flag, eval_act, tanh_flag)
         
