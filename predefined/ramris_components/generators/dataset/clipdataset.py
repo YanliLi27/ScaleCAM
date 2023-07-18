@@ -3,7 +3,7 @@ import SimpleITK as sitk
 import numpy as np
 from torch.utils import data
 from skimage.transform import resize
-from generators.dataset.utils.resample import resampler
+from predefined.ramris_components.generators.dataset.utils.resample import resampler
 import torch
 
 

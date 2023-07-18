@@ -40,7 +40,7 @@ def _common_list_generator(init_dict:dict) ->dict:
 
 
 def _common_list_finder(init_dict:dict) ->dict:
-    dict_path = './generators/scanner/logs/img_id_list.pkl'
+    dict_path = 'D:\\ESMIRAcode\\RA_CLIP\\generators/scanner/logs/img_id_list.pkl'
     if os.path.isfile(dict_path):
         with open(dict_path, "rb") as tf:
             common_list = pickle.load(tf)

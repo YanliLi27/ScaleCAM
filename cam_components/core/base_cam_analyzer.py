@@ -110,7 +110,7 @@ class BaseCAM_A:
                 target_category = 0  # for regression, the target_category should be given
             assert isinstance(target_category, int)
             prob_predict_category = np_output[:, target_category]  # 
-            predict_category = target_category
+            predict_category = [target_category] * batch_size
             pred_scores = np_output[:, target_category]
             nega_scores = None
             target_category = [target_category] * batch_size

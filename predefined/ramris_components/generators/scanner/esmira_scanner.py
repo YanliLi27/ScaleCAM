@@ -5,9 +5,9 @@ import pandas as pd
 # from scanner.scanner_utils.central_slice import central_selector
 # from scanner.scanner_utils.ramris_reader import ramris_reader
 # from scanner.scanner_utils.ramris_search import ramris_search
-from generators.scanner.scanner_utils.central_slice import central_selector
-from generators.scanner.scanner_utils.ramris_reader import ramris_reader
-from generators.scanner.scanner_utils.ramris_search import ramris_search
+from predefined.ramris_components.generators.scanner.scanner_utils.central_slice import central_selector
+from predefined.ramris_components.generators.scanner.scanner_utils.ramris_reader import ramris_reader
+from predefined.ramris_components.generators.scanner.scanner_utils.ramris_search import ramris_search
 from typing import Union, Tuple
 
 

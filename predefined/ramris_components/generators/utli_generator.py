@@ -4,17 +4,17 @@ import pandas as pd
 # from scanner.esmira_scanner import esmira_scanner
 # from dataset.clipdataset import CLIPDataset
 # from dataset.esmiradataset import ESMIRADataset
-from generators.scanner.id_scanner import img_id_scanner, ramris_id_filter
-from generators.scanner.esmira_scanner import esmira_scanner
-from generators.dataset.clipdataset import CLIPDataset
-from generators.dataset.esmiradataset import ESMIRADataset
+from predefined.ramris_components.generators.scanner.id_scanner import img_id_scanner, ramris_id_filter
+from predefined.ramris_components.generators.scanner.esmira_scanner import esmira_scanner
+from predefined.ramris_components.generators.dataset.clipdataset import CLIPDataset
+from predefined.ramris_components.generators.dataset.esmiradataset import ESMIRADataset
 from torch.utils.data import Dataset
 from typing import Union, Tuple
 import pickle
 from sklearn.model_selection import KFold
 import numpy as np
-from utils.distri_calculator import distri_calculators, corr_calculator, sca_calculator
-from generators.dataset.utils.resample import resampler
+from predefined.ramris_components.utils.distri_calculator import distri_calculators, corr_calculator, sca_calculator
+from predefined.ramris_components.generators.dataset.utils.resample import resampler
 
 
 # 代码结构：
@@ -61,8 +61,8 @@ class ESMIRA_generator:
         for site in target_site:
             for biomarker in target_biomarker:
                 self.len_ramris_site += output_matrix[site_order[site]][bio_order[biomarker]]
-        self.default_id_path = './generators/scanner/logs/id_list.pkl'
-        self.default_df_path = './generators/scanner/logs/utli_df.pkl'
+        self.default_id_path = 'D:\\ESMIRAcode\\RA_CLIP\\generators/scanner/logs/id_list.pkl'
+        self.default_df_path = 'D:\\ESMIRAcode\\RA_CLIP\\generators/scanner/logs/utli_df.pkl'
         if os.path.isfile(self.default_id_path):
             with open(self.default_id_path, "rb") as tf:
                 self.common_dict = pickle.load(tf)
@@ -181,7 +181,7 @@ class ESMIRA_generator:
                     pickle.dump(self.target_ramris_split, tf)
                 with open(target_mse_save, "wb") as tf:
                     pickle.dump(self.target_mse, tf)
-            self._reader_corr_printer(self.target_ramris_split, self.target_mse)
+            # self._reader_corr_printer(self.target_ramris_split, self.target_mse)
         print('-------------------------------> Dataset Initialization Finished <-------------------------------')
 
 
@@ -402,7 +402,7 @@ class ESMIRA_generator:
             target_name = 1
         else:
             target_name = 0
-        output_name = "./generators/scanner/recover/{}_{}_{}_{}.pkl".format(cate_name, site_name, reader_name, target_name)
+        output_name = "D:\\ESMIRAcode\\RA_CLIP\\generators/scanner/recover/{}_{}_{}_{}.pkl".format(cate_name, site_name, reader_name, target_name)
         return output_name
 
 
@@ -429,9 +429,9 @@ class ESMIRA_generator:
         else:
             target_name = 0
         if target_biomarker:
-            output_name = "./generators/scanner/recover/{}_{}_{}_{}_{}_{}.pkl".format(cate_name, site_name, target_biomarker[0], reader_name, target_name, keyword)
+            output_name = "D:\\ESMIRAcode\\RA_CLIP\\generators/scanner/recover/{}_{}_{}_{}_{}_{}.pkl".format(cate_name, site_name, target_biomarker[0], reader_name, target_name, keyword)
         else:
-            output_name = "./generators/scanner/recover/{}_{}_{}_{}_{}.pkl".format(cate_name, site_name, reader_name, target_name, keyword)
+            output_name = "D:\\ESMIRAcode\\RA_CLIP\\generators/scanner/recover/{}_{}_{}_{}_{}.pkl".format(cate_name, site_name, reader_name, target_name, keyword)
         return output_name
 
 
@@ -484,7 +484,7 @@ class ESMIRA_generator:
         return overall_mse, val_mse, split_all_mse, split_val_mse
     
 
-    def _corr_printer(self, score_array, mse_array, fig_path:str=f'./generators/background/dist.jpg', num_scores_per_site:int=43) -> Tuple[str, str, np.float32, np.float32]:
+    def _corr_printer(self, score_array, mse_array, fig_path:str=f'D:\\ESMIRAcode\\RA_CLIP\\generators/background/dist.jpg', num_scores_per_site:int=43) -> Tuple[str, str, np.float32, np.float32]:
         # score_array -- [batch/num_patients, num_scores_per_site]
         if not os.path.exists(os.path.dirname(fig_path)):
             os.makedirs(os.path.dirname(fig_path))
@@ -527,7 +527,7 @@ class ESMIRA_generator:
         print('dataset readers correlation:', corr_mse_score)
         print('correlation p value:', p_value)
         sca_calculator(Garray=array_reader1, Parray=array_reader2, num_scores_per_site=array_ramris.shape[1],
-                        division=False, save_path=f'./generators/background/scatter_gt_pr.jpg')
+                        division=False, save_path=f'D:\\ESMIRAcode\\RA_CLIP\\generators/background/scatter_gt_pr.jpg')
 
 
     def returner(self, task_mode:str='clip', phase:str='train', fold_order:int=0, material:Union[str, list]='img',
@@ -589,11 +589,11 @@ class ESMIRA_generator:
             print(f'val split mse: {split_val_mse}')
             distri_all_path, corr_mse_score, p_value = self._corr_printer(np.asarray((train_ramris_list)), 
                                                                           np.asarray((train_mse_list)),
-                                                                          fig_path=f'./models/figs/fold_{fold_order}/train_{phase}_{fold_order}_dist.jpg',
+                                                                          fig_path=f'D:\\ESMIRAcode\\RA_CLIP\\models/figs/fold_{fold_order}/train_{phase}_{fold_order}_dist.jpg',
                                                                           num_scores_per_site=self.len_ramris_site)
             distri_val_path, val_corr_mse_score, val_p_value = self._corr_printer(np.asarray(val_ramris_list), 
                                                                                   np.asarray(val_mse_list),
-                                                                                  fig_path=f'./models/figs/fold_{fold_order}/val_{phase}_{fold_order}_dist.jpg',
+                                                                                  fig_path=f'D:\\ESMIRAcode\\RA_CLIP\\models/figs/fold_{fold_order}/val_{phase}_{fold_order}_dist.jpg',
                                                                                   num_scores_per_site=self.len_ramris_site)
             print(f'distribution of ramris in all set saved in {distri_all_path}, in val set saved in {distri_val_path}')
             print(f'corr of mse and rmaris in all is: {corr_mse_score}, p value is: {p_value}')

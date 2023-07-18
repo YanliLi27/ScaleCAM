@@ -14,12 +14,12 @@ def im_save(im_overall, im_target, im_diff,
     im_save.to_csv(all_save_name)
     print(f'save csv file:{all_save_name}, succeed')
 
-    target_save_name = cam_output_path.replace('All_', 'Target_')
+    target_save_name = cam_output_path.replace('All_fold', 'Target_fold')
     target_im_save = pd.DataFrame(im_target)
     target_im_save.to_csv(target_save_name)
     print(f'save csv file:{target_save_name}, succeed')
 
-    diff_save_name = cam_output_path.replace('All_', 'Diff_')
+    diff_save_name = cam_output_path.replace('All_fold', 'Diff_fold')
     diff_im_save = pd.DataFrame(im_diff)
     diff_im_save.to_csv(diff_save_name)
     print(f'save csv file:{diff_save_name}, succeed')
@@ -36,9 +36,9 @@ def im_save(im_overall, im_target, im_diff,
 
 def im_reader(IM_save_name:str, cam_mode:str):
     if 'abs' in cam_mode:
-        im_save_name = IM_save_name.replace('All_', 'Target_')
+        im_save_name = IM_save_name.replace('All_fold', 'Target_fold')
     elif 'diff' in cam_mode:
-        im_save_name = IM_save_name.replace('All_', 'Diff_')
+        im_save_name = IM_save_name.replace('All_fold', 'Diff_fold')
     elif 'all' in cam_mode:
         return None
     else:

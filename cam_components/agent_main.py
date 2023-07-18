@@ -184,14 +184,24 @@ class CAMAgent:
                     else:
                         single_max_reviser = 1
 
-                    if single_predict_category == y.data.cpu().numpy()[i]:  # 只叠加正确分类的部分
-                        # 添加总体IM
-                        im_overall = im_overall + single_grayscale_cam
-                        in_fold_counter += 1
-                        # 添加对应类的IM
-                        
-                        im_target[single_predict_category] = im_target[single_predict_category] + single_grayscale_cam
-                        in_fold_target_counter[single_predict_category] += single_max_reviser
+                    if self.ram:
+                        if single_predict_category == y.data.cpu().numpy()[i][target_category]:
+                            # 添加总体IM
+                            im_overall = im_overall + single_grayscale_cam
+                            in_fold_counter += 1
+                            # 添加对应类的IM
+                            
+                            im_target[single_predict_category] = im_target[single_predict_category] + single_grayscale_cam
+                            in_fold_target_counter[single_predict_category] += single_max_reviser
+                    else:
+                        if single_predict_category == y.data.cpu().numpy()[i]:  # 只叠加正确分类的部分
+                            # 添加总体IM
+                            im_overall = im_overall + single_grayscale_cam
+                            in_fold_counter += 1
+                            # 添加对应类的IM
+                            
+                            im_target[single_predict_category] = im_target[single_predict_category] + single_grayscale_cam
+                            in_fold_target_counter[single_predict_category] += single_max_reviser
         # im_target - [num_classes, num_features]
         im_overall = im_overall / in_fold_counter
         im_target = im_target / in_fold_target_counter[:, None]

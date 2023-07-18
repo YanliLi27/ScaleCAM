@@ -2,7 +2,7 @@ from typing import Union
 from cam_components.agent_main import CAMAgent
 from torch.utils.data import DataLoader
 import os
-
+from torchsummary import summary
 
 
 def ramris_pred_runner(data_dir='', target_category:Union[None, int, str, list]=None, 
@@ -54,23 +54,24 @@ def ramris_pred_runner(data_dir='', target_category:Union[None, int, str, list]=
                 target_biomarker = ['ERO', 'BME', 'SYN', 'TSY']
             for biomarker in target_biomarker:
                 out_ch += output_matrix[site_order[site]][bio_order[biomarker]]
-
-        model = ModelClip(in_channel, out_ch=out_ch, dimension=2, group_cap=depth)  
+        width = 2
+        model = ModelClip(in_channel, out_ch=out_ch, dimension=2, group_cap=depth, width=2)  
+        summary(model, (40, 512, 512))
 
         weight_path = output_finder(target_category, target_site, target_dirc, fold_order)
-        mid_path = 'ALLBIO' if len(target_category)>1 else f'ALL{target_category[0]}'
+        mid_path = 'ALLBIO' if (target_category is None or len(target_category)>1) else f'ALL{target_category[0]}'
         weight_abs_path = os.path.join(f'D:\\ESMIRAcode\\RA_CLIP\\models\\weights\\{mid_path}', weight_path)
-        if os.path.isfile():
+        if os.path.isfile(weight_abs_path):
             checkpoint = torch.load(weight_abs_path)
             model.load_state_dict(checkpoint)
         else:
-            raise ValueError('weights not exisst')
+            raise ValueError('weights not exist')
  
         target_layer = [model.encoder_class.Conv4]
         # --------------------------------------- model --------------------------------------- #
 
         # --------------------------------------- im --------------------------------------- #
-        num_out_channel = 256 * groups
+        num_out_channel = 256 * groups * width
         num_classes = out_ch
         im_dir = './output/im/RAMRISpred_{}'.format(weight_path.replace('.model', ''))
         if not os.path.exists(im_dir):
