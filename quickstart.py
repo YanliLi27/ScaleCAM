@@ -33,6 +33,7 @@ if __name__ == '__main__':
     randomization:bool=False
     random_severity:int=1  # model randomization for sanity check
     ram:bool=False # for regression tasks, supported for multi-output
+    use_pred:bool=False  # for a lot of output to improve the efficiency, dont use it for multioutput regression
     # -------------------------------- optional end -------------------------------- #
 
     Agent = CAMAgent(model, target_layer, dataset,  
@@ -44,7 +45,8 @@ if __name__ == '__main__':
                 maxmin_flag, remove_minus_flag, # creator
                 im_selection_mode, im_selection_extra, # importance matrices attributes
                 max_iter,  # early stop
-                randomization, random_severity  # model randomization for sanity check
+                randomization, random_severity,  # model randomization for sanity check
+                use_pred,
                 )
     Agent.analyzer_main()
     Agent.creator_main(eval_act='corr', mm_ratio=1.5, use_origin=True)

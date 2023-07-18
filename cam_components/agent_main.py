@@ -38,6 +38,7 @@ class CAMAgent:
                 im_selection_mode:str='all', im_selection_extra:float=0.05, # importance matrices attributes
                 max_iter=None,  # early stop
                 randomization:bool=False, random_severity:int=1,  # model randomization for sanity check
+                use_pred:bool=False,  # improve effeciency
                 ) -> None:
         
 
@@ -74,6 +75,7 @@ class CAMAgent:
         assert im_selection_mode in ['max', 'top', 'diff_top', 'freq', 'index', 'all']
         self.im_selection_mode = im_selection_mode
         self.im_selection_extra = im_selection_extra
+        self.use_pred = use_pred
         
         # early stop
         if max_iter is not None:
@@ -95,7 +97,10 @@ class CAMAgent:
     
 
     def _im_finder(self, target_category):
-        im_name = f'All_fold{self.fold_order}_im_cate{target_category}_{self.cam_method_name}.csv' 
+        if self.use_pred:
+            im_name = f'All_fold{self.fold_order}_im_cateNone_{self.cam_method_name}.csv' 
+        else:
+            im_name = f'All_fold{self.fold_order}_im_cate{target_category}_{self.cam_method_name}.csv' 
         im_path = os.path.join(self.im_dir, im_name)
         return im_path
 

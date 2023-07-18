@@ -36,7 +36,9 @@ from predefined.ramris_components.generators.dataset.utils.resample import resam
 
 class ESMIRA_generator:
     def __init__(self, data_root:str, target_category:list=['EAC', 'ATL'], target_site:list=['Wrist'], target_dirc:list=['TRA', 'COR'],
-                 target_reader:list=['Reader1', 'Reader2'], target_biomarker:Union[list, None]=None, task_mode:str='class') ->None:
+                 target_reader:list=['Reader1', 'Reader2'], target_biomarker:Union[list, None]=None, task_mode:str='class',
+                 print_flag:bool=False) ->None:
+        self.print_flag = print_flag
         # ----------------------------------------------------- id initialization ----------------------------------------------------- #
         # The common ids: common_list is the dict of EAC/CSA/ATL, that patients exist in all target_site
         # {'EAC':[LIST], 'CSA':[LIST], 'ATL':[LIST]}
@@ -181,7 +183,8 @@ class ESMIRA_generator:
                     pickle.dump(self.target_ramris_split, tf)
                 with open(target_mse_save, "wb") as tf:
                     pickle.dump(self.target_mse, tf)
-            # self._reader_corr_printer(self.target_ramris_split, self.target_mse)
+            if self.print_flag:
+                self._reader_corr_printer(self.target_ramris_split, self.target_mse)
         print('-------------------------------> Dataset Initialization Finished <-------------------------------')
 
 
@@ -524,8 +527,9 @@ class ESMIRA_generator:
         array_reader2 = np.sum(array_reader2, axis=1)
         # get the correlation
         corr_mse_score, p_value = corr_calculator(array_reader1, array_reader2, array_ramris.shape[1], division=None)
-        print('dataset readers correlation:', corr_mse_score)
-        print('correlation p value:', p_value)
+        if self.print_flag:
+            print('dataset readers correlation:', corr_mse_score)
+            print('correlation p value:', p_value)
         sca_calculator(Garray=array_reader1, Parray=array_reader2, num_scores_per_site=array_ramris.shape[1],
                         division=False, save_path=f'D:\\ESMIRAcode\\RA_CLIP\\generators/background/scatter_gt_pr.jpg')
 
@@ -584,9 +588,10 @@ class ESMIRA_generator:
 
             # statistic
             overall_mse, val_mse, split_all_mse, split_val_mse = self._mse_printer(train_mse_list, val_mse_list, self.len_ramris_site)
-            print(f'overall mse: {overall_mse}, val mse: {val_mse}')
-            print(f'overall split mse: {split_all_mse}')
-            print(f'val split mse: {split_val_mse}')
+            if self.print_flag:
+                print(f'overall mse: {overall_mse}, val mse: {val_mse}')
+                print(f'overall split mse: {split_all_mse}')
+                print(f'val split mse: {split_val_mse}')
             distri_all_path, corr_mse_score, p_value = self._corr_printer(np.asarray((train_ramris_list)), 
                                                                           np.asarray((train_mse_list)),
                                                                           fig_path=f'D:\\ESMIRAcode\\RA_CLIP\\models/figs/fold_{fold_order}/train_{phase}_{fold_order}_dist.jpg',
@@ -595,9 +600,10 @@ class ESMIRA_generator:
                                                                                   np.asarray(val_mse_list),
                                                                                   fig_path=f'D:\\ESMIRAcode\\RA_CLIP\\models/figs/fold_{fold_order}/val_{phase}_{fold_order}_dist.jpg',
                                                                                   num_scores_per_site=self.len_ramris_site)
-            print(f'distribution of ramris in all set saved in {distri_all_path}, in val set saved in {distri_val_path}')
-            print(f'corr of mse and rmaris in all is: {corr_mse_score}, p value is: {p_value}')
-            print(f'for val the corr is {val_corr_mse_score}, val p value: {val_p_value}')
+            if self.print_flag:
+                print(f'distribution of ramris in all set saved in {distri_all_path}, in val set saved in {distri_val_path}')
+                print(f'corr of mse and rmaris in all is: {corr_mse_score}, p value is: {p_value}')
+                print(f'for val the corr is {val_corr_mse_score}, val p value: {val_p_value}')
 
             # dataset
             train_dataset = CLIPDataset(self.data_root, train_img_list, train_ramris_list, transform[0], full_img)

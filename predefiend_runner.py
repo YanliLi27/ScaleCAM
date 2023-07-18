@@ -15,6 +15,7 @@ def naturalimage_runner(target_category:Union[None, int, str]=None, model_flag:s
     max_iter=max_iter  # early stop
     groups:int=1
     ram:bool=False  # if it's a regression task
+    use_pred:bool=False
     # -------------------------------- optional end -------------------------------- #
     assert task in ['CatsDogs', 'MNIST', 'Imagenet']
     assert model_flag in ['vgg', 'resnet', 'scratch', 'scratch_mnist']
@@ -54,7 +55,8 @@ def naturalimage_runner(target_category:Union[None, int, str]=None, model_flag:s
                                     maxmin_flag=mm, remove_minus_flag=rm, # creator
                                     im_selection_mode=im, im_selection_extra=im_selection_extra, # importance matrices attributes
                                     max_iter=max_iter,  # early stop
-                                    randomization=False, random_severity=0  # model randomization for sanity check
+                                    randomization=False, random_severity=0,  # model randomization for sanity check
+                                    use_pred=use_pred
                                     )
                     Agent.analyzer_main()
                     Agent.creator_main(eval_act='corr', mm_ratio=1.5, use_origin=use_origin, tanh_flag=True)
@@ -69,6 +71,7 @@ def catsdog3d_runner(target_category:Union[None, int, str]=1, task:str='catsdogs
     max_iter=None  # early stop
     groups:int=1
     ram:bool=False  # if it's a regression task
+    use_pred:bool=False
     # -------------------------------- optional end -------------------------------- #
 
 
@@ -106,7 +109,8 @@ def catsdog3d_runner(target_category:Union[None, int, str]=1, task:str='catsdogs
                                     maxmin_flag=mm, remove_minus_flag=rm, # creator
                                     im_selection_mode=im, im_selection_extra=im_selection_extra, # importance matrices attributes
                                     max_iter=max_iter,  # early stop
-                                    randomization=False, random_severity=0  # model randomization for sanity check
+                                    randomization=False, random_severity=0,  # model randomization for sanity check
+                                    use_pred=use_pred
                                     )
                     Agent.analyzer_main()
                     Agent.creator_main(eval_act='corr', mm_ratio=1.5, use_origin=use_origin, tanh_flag=True)
@@ -121,6 +125,7 @@ def medical_runner(target_category:Union[None, int, str]=1, task:str='luna', dat
     max_iter=None  # early stop
     groups:int=1  # no group convolution here
     ram:bool=False  # if it's a regression task
+    use_pred:bool=False
     # -------------------------------- optional end -------------------------------- #
     assert task in ['luna', 'rsna', 'siim', 'us', 'ddsm' ]
 
@@ -158,7 +163,8 @@ def medical_runner(target_category:Union[None, int, str]=1, task:str='luna', dat
                                         maxmin_flag=mm, remove_minus_flag=rm, # creator
                                         im_selection_mode=im, im_selection_extra=im_selection_extra, # importance matrices attributes
                                         max_iter=max_iter,  # early stop
-                                        randomization=False, random_severity=0  # model randomization for sanity check
+                                        randomization=False, random_severity=0,  # model randomization for sanity check
+                                        use_pred=use_pred
                                         )
                         Agent.analyzer_main()
                         Agent.creator_main(eval_act='corr', mm_ratio=1.5, use_origin=True)
@@ -174,6 +180,7 @@ def esmira_runner(target_category:Union[None, int, str]=1, data_dir:str='D:\\ESM
     max_iter=None  # early stop
     groups:int=len(target_dirc) * len(target_site)
     ram:bool=False  # if it's a regression task
+    use_pred:bool=False
     # -------------------------------- optional end -------------------------------- #
 
     # information needed:
@@ -237,7 +244,8 @@ def esmira_runner(target_category:Union[None, int, str]=1, data_dir:str='D:\\ESM
                                         maxmin_flag=mm, remove_minus_flag=rm, # creator
                                         im_selection_mode=im, im_selection_extra=im_selection_extra, # importance matrices attributes
                                         max_iter=max_iter,  # early stop
-                                        randomization=False, random_severity=0  # model randomization for sanity check
+                                        randomization=False, random_severity=0,  # model randomization for sanity check
+                                        use_pred=use_pred
                                         )
                         Agent.analyzer_main()
                         Agent.creator_main(eval_act='corr', mm_ratio=2, use_origin=True, tanh_flag=tanh_flag)
@@ -256,6 +264,7 @@ def ramris_pred_runner(data_dir='', target_category=['EAC'],
     max_iter=None  # early stop
     groups:int=len(target_dirc) * len(target_site)
     ram:bool=True  # if it's a regression task
+    use_pred:bool=False
     # -------------------------------- optional end -------------------------------- #
 
     # information needed:
@@ -336,7 +345,8 @@ def ramris_pred_runner(data_dir='', target_category=['EAC'],
                                         maxmin_flag=mm, remove_minus_flag=rm, # creator
                                         im_selection_mode=im, im_selection_extra=im_selection_extra, # importance matrices attributes
                                         max_iter=max_iter,  # early stop
-                                        randomization=False, random_severity=0  # model randomization for sanity check
+                                        randomization=False, random_severity=0,  # model randomization for sanity check
+                                        use_pred=use_pred
                                         )
                         Agent.analyzer_main()
                         Agent.creator_main(eval_act='corr', mm_ratio=2, use_origin=True, tanh_flag=tanh_flag)

@@ -19,6 +19,7 @@ def ramris_pred_runner(data_dir='', target_category:Union[None, int, str, list]=
     max_iter=None  # early stop
     groups:int=len(target_dirc) * len(target_site)
     ram:bool=True  # if it's a regression task
+    use_pred:bool=False
     # -------------------------------- optional end -------------------------------- #
 
     # information needed:
@@ -32,7 +33,7 @@ def ramris_pred_runner(data_dir='', target_category:Union[None, int, str, list]=
             assert (item in ['ERO', 'BME', 'SYN', 'TSY'])
     dataset_generator = ESMIRA_generator(data_dir, target_category, target_site, target_dirc, target_reader, target_biomarker, task_mode)
 
-    for fold_order in range(1, 5):
+    for fold_order in range(0, 1):
         _, val_dataset = dataset_generator.returner(task_mode=task_mode, phase=phase, fold_order=fold_order,
                                                                 material='img', monai=True, full_img=full_img)
         dataset = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=False,
@@ -102,7 +103,8 @@ def ramris_pred_runner(data_dir='', target_category:Union[None, int, str, list]=
                                         maxmin_flag=mm, remove_minus_flag=rm, # creator
                                         im_selection_mode=im, im_selection_extra=im_selection_extra, # importance matrices attributes
                                         max_iter=max_iter,  # early stop
-                                        randomization=False, random_severity=0  # model randomization for sanity check
+                                        randomization=False, random_severity=0,  # model randomization for sanity check
+                                        use_pred=use_pred
                                         )
                         Agent.analyzer_main()
                         Agent.creator_main(eval_act=False, mm_ratio=2, use_origin=True, 
