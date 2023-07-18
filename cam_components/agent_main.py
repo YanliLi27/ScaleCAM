@@ -399,19 +399,19 @@ class CAMAgent:
                             output_label = tc_pred_category[i]
                             cf_num = str(np.around(tc_score[i], decimals=3))
                             # save the cam
-                            save_name = os.path.join(cam_dir, f'fold{self.fold_order}_pr{output_label}_target{self.target_category[i]}_{in_fold_counter}_cf{cf_num}.nii.gz')
+                            save_name = os.path.join(cam_dir, f'fold{self.fold_order}_{in_fold_counter}_pr{output_label}_target{self.target_category[i]}_cf{cf_num}.nii.gz')
                             origin_save_name = save_name.replace('.nii.gz', '_ori.nii.gz')
                             
                             for tc_index in range(len(cluster)):
-                                save_name = save_name.replace('.nii.gz', '_gro{}_clu{}.nii.gz'.format(group_index, tc_index))
-                                origin_save_name = origin_save_name.replace('.nii.gz', '_gro{}_clu{}.nii.gz'.format(group_index, tc_index))
+                                neo_save_name = save_name.replace('.nii.gz', '_gro{}_clu{}.nii.gz'.format(j, tc_index))
+                                neo_origin_save_name = origin_save_name.replace('.nii.gz', '_gro{}.nii.gz'.format(j))
                                 writter = sitk.ImageFileWriter()
-                                writter.SetFileName(save_name)
+                                writter.SetFileName(neo_save_name)
                                 writter.Execute(sitk.GetImageFromArray(clustered_cam[i][j][tc_index]))
-                                if os.path.isfile(origin_save_name):
+                                if os.path.isfile(neo_origin_save_name):
                                     continue
                                 else:
-                                    writter.SetFileName(origin_save_name)
+                                    writter.SetFileName(neo_origin_save_name)
                                     # [batch, organ_groups, z, y, x, channel] to [batch, organ_groups, z, y, x]
                                     # TODO currently we just use the second layer of input:
                                     writter.Execute(sitk.GetImageFromArray(origin_img[i][j][1]))
@@ -425,7 +425,7 @@ class CAMAgent:
                 # from [tc, batch, groups, width, length] to [batch, groups, width, tc, length]
                 for i in range(self.batch_size):
                     in_fold_counter += 1
-                    save_name = os.path.join(cam_dir, f'fold{self.fold_order}_pr{output_label}_{in_fold_counter}_cf{cf_num}_.npy')
+                    save_name = os.path.join(cam_dir, f'fold{self.fold_order}_{in_fold_counter}_pr{output_label}_cf{cf_num}_.npy')
                     np.save(save_name, np.asarray({'img':origin_img[i],'cam':tc_cam[i]}))            
 
             else:  # get one by one
@@ -441,12 +441,12 @@ class CAMAgent:
                                                                             tc_score[i], self.groups, origin_img[i], \
                                                                             use_origin=use_origin)
                             # save the cam
-                            save_name = os.path.join(cam_dir, f'fold{self.fold_order}_pr{output_label}_target{self.target_category[j]}_{in_fold_counter}_cf{cf_num}.jpg')
+                            save_name = os.path.join(cam_dir, f'fold{self.fold_order}_{in_fold_counter}_pr{output_label}_target{self.target_category[j]}_cf{cf_num}.jpg')
                             cv2.imwrite(save_name, concat_img_all)
 
                             # save the backup npy for further calculation
                             if backup_flag:
-                                backup_name = os.path.join(backup_dir, f'fold{self.fold_order}_pr{output_label}_target{self.target_category[j]}_{in_fold_counter}_cf{cf_num}.npy')
+                                backup_name = os.path.join(backup_dir, f'fold{self.fold_order}_{in_fold_counter}_pr{output_label}_target{self.target_category[j]}_cf{cf_num}.npy')
                                 np.save(backup_name, np.asarray({'img':origin_img[i],'cam':tc_cam[i][j]}))
                                 # grayscale_cam [-batch- * [1(groups), 256, 256]]
                                 # origin_img [-batch-, organ_groups, channel=3, y, x]
@@ -461,7 +461,7 @@ class CAMAgent:
                             output_label = tc_pred_category[i]
                             cf_num = str(np.around(tc_score[i], decimals=3))
                             # save the cam
-                            save_name = os.path.join(cam_dir, f'fold{self.fold_order}_pr{output_label}_target{self.target_category[j]}_{in_fold_counter}_cf{cf_num}.nii.gz')
+                            save_name = os.path.join(cam_dir, f'fold{self.fold_order}_{in_fold_counter}_pr{output_label}_target{self.target_category[j]}_cf{cf_num}.nii.gz')
                             origin_save_name = save_name.replace('.nii.gz', '_ori.nii.gz')
                             
                             for group_index in range(origin_img.shape[1]):
@@ -565,13 +565,13 @@ class CAMAgent:
                                                                         use_origin=use_origin)
                         # save the cam
                         str_labels = (str(y.data.cpu().numpy()[i]))[:2]
-                        save_name = os.path.join(cam_dir, f'fold{self.fold_order}_tr{str_labels}pr{output_label}_{in_fold_counter}_cf{cf_num}.jpg')
+                        save_name = os.path.join(cam_dir, f'fold{self.fold_order}_{in_fold_counter}_tr{str_labels}pr{output_label}_cf{cf_num}.jpg')
                         in_fold_counter += 1
                         cv2.imwrite(save_name, concat_img_all)
 
                         # save the backup npy for further calculation
                         if backup_flag:
-                            backup_name = os.path.join(backup_dir, f'fold{self.fold_order}_tr{str_labels}pr{output_label}_{in_fold_counter}_cf{cf_num}.npy')
+                            backup_name = os.path.join(backup_dir, f'fold{self.fold_order}_{in_fold_counter}_tr{str_labels}pr{output_label}_cf{cf_num}.npy')
                             np.save(backup_name, np.asarray({'img':origin_img[i],'cam':grayscale_cam[i]}))
                             # grayscale_cam [-batch- * [1(groups), 256, 256]]
                             # origin_img [-batch-, organ_groups, channel=3, y, x]
@@ -583,7 +583,7 @@ class CAMAgent:
                         cf_num = str(np.around(pred_score[i], decimals=3))
                         # save the cam
                         str_labels = (str(y.data.cpu().numpy()[i]))[:2]
-                        save_name = os.path.join(cam_dir, f'fold{self.fold_order}_tr{str_labels}pr{output_label}_{in_fold_counter}_cf{cf_num}.nii.gz')
+                        save_name = os.path.join(cam_dir, f'fold{self.fold_order}_{in_fold_counter}_tr{str_labels}pr{output_label}_cf{cf_num}.nii.gz')
                         origin_save_name = save_name.replace('.nii.gz', '_ori.nii.gz')
                         in_fold_counter += 1
 
