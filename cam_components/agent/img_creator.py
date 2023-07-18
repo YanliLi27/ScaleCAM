@@ -4,7 +4,7 @@ import cv2
 from cam_components.agent.image import show_cam_on_image
 
 
-def origin_creator(img:torch.Tensor, organ_groups:int=1):
+def origin_creator(img:torch.Tensor, organ_groups:int=1, compress:bool=True):
     B, C, L, W = img.shape  # # [batch, 3, y, x]
     if C == 3:
         array_img = img.data.numpy()  # 保存numpy版本用于他用d
@@ -24,7 +24,7 @@ def origin_creator(img:torch.Tensor, organ_groups:int=1):
                 for channel in range(3):
                     img_color_group[batches, slice, channel, :] = array_img[batches, :]
         img_color_group = img_color_group.transpose(0, 1, 3, 4, 2)
-    elif C % 5 == 0:
+    elif (C > 3 and compress==True):
         array_img = img.data.numpy()  # [B, C, L, W]
         img_color_group = np.zeros([B, organ_groups, 3, L, W])
         for batches in range(B):
@@ -32,6 +32,15 @@ def origin_creator(img:torch.Tensor, organ_groups:int=1):
                 for channel in range(3):
                     img_color_group[batches, slice, channel, :] = array_img[batches, (slice*5+2),:]
         img_color_group = img_color_group.transpose(0, 1, 3, 4, 2)        
+    elif (C > 3 and compress==False):
+        array_img = img.data.numpy().reshape(B, organ_groups, C//organ_groups, L, W)  # [B, OG, D, L, W]
+        img_color_group = np.zeros([B, organ_groups, 3, C//organ_groups, L, W])  # [B, OG, C, D, L, W]
+        for batches in range(B):  # [OG, C, D, L, W]
+            for organs in range(organ_groups):  # [C, D, L, W]
+                for channel in range(3):  # [D, L, W]
+                    img_color_group[batches, organs, channel, :] = array_img[batches, organs,:]
+        img_color_group = img_color_group.transpose(0, 1, 3, 4, 5, 2)          
+        # from [B, OG, C(3), D, L, W] to [B, OG, D, L, W, C(3)]
     else:
         raise ValueError(f'Not valid task, channel number: {C}')
     return img_color_group

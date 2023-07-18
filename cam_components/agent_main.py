@@ -226,16 +226,18 @@ class CAMAgent:
 
     def creator_main(self, eval_act:Union[bool, str]=False, mm_ratio:float=1.5, use_origin:bool=True,
                     cluster:Union[None, str, list]=None, cluster_start:int=0,
-                    tanh_flag:bool=False, backup_flag:bool=False):
+                    tanh_flag:bool=False, backup_flag:bool=False, img_compress:bool=False):
         '''
         mm_ratio for better visuaization
         use_origin for overlay/or not
         '''
         # step 3. pred step
         if type(self.target_category)==list:
-            self._cam_creator_step_width(self.target_layer, mm_ratio, use_origin, backup_flag, tanh_flag, cluster, cluster_start)
+            self._cam_creator_step_width(self.target_layer, mm_ratio, use_origin, backup_flag, tanh_flag,
+                                          cluster, cluster_start, compress=img_compress)
         else:
-            self._cam_creator_step_depth(self.target_layer, mm_ratio, use_origin, backup_flag, eval_act, tanh_flag)
+            self._cam_creator_step_depth(self.target_layer, mm_ratio, use_origin, backup_flag, eval_act, tanh_flag,
+                                         compress=img_compress)
         
 
     def _get_importances(self, im_path, mm_ratio):
@@ -266,6 +268,8 @@ class CAMAgent:
                                 tanh_flag:bool=False, 
                                 cluster:Union[None, str, list]=None, cluster_start:int=0,
                                 t_max:float=0.95, t_min:float=0.05,
+                                # --- img function --- #
+                                compress:bool=False,
                                 device=torch.device("cuda" if torch.cuda.is_available() else "cpu")):
         
         # get importance matrices for each category
@@ -289,14 +293,15 @@ class CAMAgent:
             if cluster=='signal':  # x -- [batch, width, lengths]
                 origin_img = x
             elif len(x.shape)==4: # x -- [batch, channel, y, x]
-                origin_img = origin_creator(x, organ_groups=self.groups)
+                origin_img = origin_creator(x, organ_groups=self.groups, compress=compress)
                 # origin_img -- [batch, organ_groups, channel=3, y, x]
             elif len(x.shape)==5: # x -- [batch, channel, z, y, x]/[batch, group/channel=2, Depth, Length, Width]
                 origin_img = origin_creator3d(x, organ_groups=self.groups)
-                origin_img = origin_img.transpose(0, 1, 5, 2, 3, 4)  # because we got no way for colored 3d images
-                # origin_img -- [batch, organ_groups, channel=3, z, y, x]
             else:
                 raise ValueError('unsupported input: not signal(batch, width, lengths), and not 2D, 2.5D or 3D images')
+            if len(origin_img.shape)>5:
+                origin_img = origin_img.transpose(0, 1, 5, 2, 3, 4)  # because we got no way for colored 3d images
+                # origin_img -- [batch, organ_groups, channel=3, z, y, x]
             x = x.to(dtype=torch.float32).to(device)
             y = y.to(dtype=torch.float32).to(device)
 
@@ -367,6 +372,13 @@ class CAMAgent:
                     clustered_cam[:, :, i] = np.sum(tc_cam[:, :, cluster_counter:cluster_counter+cluster[i]], axis=2)
                     cluster_counter+=cluster[i]
                 # clustered_cam [batch, groups, 3, (depth),width, length]
+
+                # missing dim because of 2.5D
+                if len(clustered_cam.shape)<len(origin_img.shape):
+                    # from [batch, groups, 3, width, length] to [batch, groups, 3, depth, width, length]
+                    clustered_cam = np.expand_dims(clustered_cam, axis=3)
+                    # [2, 2, 3, 1, 512, 512]
+                    
                 for i in range(B):
                     in_fold_counter += 1
                     for j in range(G):
@@ -375,24 +387,24 @@ class CAMAgent:
                                                                             tc_score[i], self.groups, origin_img[i], \
                                                                             use_origin=use_origin)
                             # save the cam
-                            save_name = os.path.join(cam_dir, f'fold{self.fold_order}_pr{output_label}_target{self.target_category[j]}_{in_fold_counter}_cf{cf_num}.jpg')
+                            save_name = os.path.join(cam_dir, f'fold{self.fold_order}_pr{output_label}_target{self.target_category[i]}_{in_fold_counter}_cf{cf_num}.jpg')
                             cv2.imwrite(save_name, concat_img_all)
                             # save the backup npy for further calculation
                             if backup_flag:
-                                backup_name = os.path.join(backup_dir, f'fold{self.fold_order}_pr{output_label}_target{self.target_category[j]}_{in_fold_counter}_cf{cf_num}.npy')
-                                np.save(backup_name, np.asarray({'img':origin_img[i],'cam':clustered_cam[i][j]}))
+                                backup_name = os.path.join(backup_dir, f'fold{self.fold_order}_pr{output_label}_target{self.target_category[i]}_{in_fold_counter}_cf{cf_num}.npy')
+                                np.save(backup_name, np.asarray({'img':origin_img[i],'cam':clustered_cam[i]}))
                                 # grayscale_cam [-batch- * [1(groups), 256, 256]]
                                 # origin_img [-batch-, organ_groups, channel=3, y, x]
                         elif len(clustered_cam.shape)==6:
                             output_label = tc_pred_category[i]
                             cf_num = str(np.around(tc_score[i], decimals=3))
                             # save the cam
-                            save_name = os.path.join(cam_dir, f'fold{self.fold_order}_pr{output_label}_target{self.target_category[j]}_{in_fold_counter}_cf{cf_num}.nii.gz')
+                            save_name = os.path.join(cam_dir, f'fold{self.fold_order}_pr{output_label}_target{self.target_category[i]}_{in_fold_counter}_cf{cf_num}.nii.gz')
                             origin_save_name = save_name.replace('.nii.gz', '_ori.nii.gz')
                             
                             for tc_index in range(len(cluster)):
-                                save_name = save_name.replace('.nii.gz', '_gro{}.nii.gz'.format(group_index))
-                                origin_save_name = origin_save_name.replace('.nii.gz', '_gro{}.nii.gz'.format(group_index))
+                                save_name = save_name.replace('.nii.gz', '_gro{}_clu{}.nii.gz'.format(group_index, tc_index))
+                                origin_save_name = origin_save_name.replace('.nii.gz', '_gro{}_clu{}.nii.gz'.format(group_index, tc_index))
                                 writter = sitk.ImageFileWriter()
                                 writter.SetFileName(save_name)
                                 writter.Execute(sitk.GetImageFromArray(clustered_cam[i][j][tc_index]))
@@ -476,6 +488,8 @@ class CAMAgent:
                                 backup_flag:bool=False,
                                 # --- eval --- #
                                 eval_func:Union[bool, str]=False, tanh_flag:bool=False, t_max:float=0.95, t_min:float=0.05,
+                                # --- img function --- #
+                                compress:bool=False,
                                 device=torch.device("cuda" if torch.cuda.is_available() else "cpu")):
         # im related
         im_path = self._im_finder(self.target_category)
@@ -503,12 +517,14 @@ class CAMAgent:
         # -------------- start cam calculation -------------- #
         for x,y in tqdm(self.dataset):
             if len(x.shape)==4: # x -- [batch, channel, y, x]
-                origin_img = origin_creator(x, organ_groups=self.groups)
+                origin_img = origin_creator(x, organ_groups=self.groups, compress=compress)
                 # origin_img -- [batch, organ_groups, channel=3, y, x]
             elif len(x.shape)==5: # x -- [batch, channel, z, y, x]/[batch, group/channel=2, Depth, Length, Width]
                 origin_img = origin_creator3d(x, organ_groups=self.groups)
+            else:
+                raise ValueError('unsupported input: not signal(batch, width, lengths), and not 2D, 2.5D or 3D images')
+            if len(origin_img.shape)>5:
                 origin_img = origin_img.transpose(0, 1, 5, 2, 3, 4)  # because we got no way for colored 3d images
-                # origin_img -- [batch, organ_groups, channel=3, z, y, x]
             x = x.to(dtype=torch.float32).to(device)
             y = y.to(dtype=torch.float32).to(device)
             
