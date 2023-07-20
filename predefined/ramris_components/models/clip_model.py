@@ -57,9 +57,9 @@ class conv_block_group3d(nn.Module):
 
 
 class Encoder3d(nn.Module):
-    def __init__(self, img_ch=5, group_cap=5, width=2):  # 6 is 3 TRA + 3 COR
+    def __init__(self, img_ch=2, width=2):  # 6 is 3 TRA + 3 COR
         super(Encoder3d, self).__init__()
-        group_num = img_ch // group_cap
+        group_num = img_ch
 
         self.Maxpool = nn.MaxPool3d(kernel_size=(1, 2, 2), stride=(1, 2, 2))
         self.Conv1 = conv_block_group3d(ch_in=img_ch, ch_out=32*group_num*width, group_num=group_num)
@@ -122,13 +122,14 @@ class Decoder3d(nn.Module):
 
 
 class ModelClip(nn.Module):
-    def __init__(self, img_ch=5, out_ch=2, dimension:int=2, group_cap:int=5, width:int=2, init_weights: bool = True):
+    def __init__(self, group_num, group_cap:int=5, out_ch=2, dimension:int=2, width:int=2, init_weights: bool = True):
         super(ModelClip, self).__init__()
-        group_num = img_ch // group_cap
+        
         if dimension==3:
-            self.encoder_class = Encoder3d(img_ch=img_ch, group_cap=group_cap, width=width)
+            self.encoder_class = Encoder3d(img_ch=group_num, width=width)
             self.decoder = Decoder3d(out_ch=out_ch, group_num=group_num, width=width)
         else:
+            img_ch= group_num * group_cap
             self.encoder_class = Encoder(img_ch=img_ch, group_cap=group_cap, width=width)
             self.decoder = Decoder(out_ch=out_ch, group_num=group_num, width=width)
         if init_weights:

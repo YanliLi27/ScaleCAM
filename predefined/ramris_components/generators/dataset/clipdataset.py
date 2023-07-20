@@ -37,7 +37,7 @@ class CLIPDataset(data.Dataset):
         if self.dimension==2:
             data = torch.vstack(data)
         else:
-            data = torch.Tensor(data)  # [Site*TRA/COR, slice/depth, length, width]
+            data = torch.stack(data)  # [Site*TRA/COR, slice/depth, length, width]
         return data, scores 
 
 

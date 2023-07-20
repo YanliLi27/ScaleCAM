@@ -20,5 +20,5 @@ if __name__ == '__main__':
                  target_site=['Wrist'], target_dirc=['TRA', 'COR'],
                  target_biomarker=None,
                  target_reader=['Reader1', 'Reader2'], task_mode='clip', phase='train',
-                 full_img=True,
+                 full_img=True, dimension=2,
                  target_output=list_of_output)

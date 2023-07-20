@@ -40,7 +40,7 @@ class ESMIRADataset(data.Dataset):
             if self.dimension==2:
                 img = torch.vstack(img)
             else:
-                img = torch.Tensor(img)
+                img = torch.stack(img)
             # ramris load
             ramris = self._load_ramris_file(idx)
             return img, ramris, label.astype(np.int64)

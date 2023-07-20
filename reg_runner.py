@@ -9,7 +9,7 @@ def ramris_pred_runner(data_dir='', target_category:Union[None, int, str, list]=
                  target_site=['Wrist'], target_dirc=['TRA', 'COR'],
                  target_biomarker=['SYN'],
                  target_reader=['Reader1', 'Reader2'], task_mode='clip', phase='train',
-                 full_img:bool=True,
+                 full_img:bool=True, dimension:int=2,
                  target_output:Union[None, int, str, list]=[0]):
     # -------------------------------- optional: -------------------------------- #
     batch_size:int=2
@@ -36,7 +36,7 @@ def ramris_pred_runner(data_dir='', target_category:Union[None, int, str, list]=
 
     for fold_order in range(0, 1):
         _, val_dataset = dataset_generator.returner(task_mode=task_mode, phase=phase, fold_order=fold_order,
-                                                                material='img', monai=True, full_img=full_img)
+                                                                material='img', monai=True, full_img=full_img, dimension=dimension)
         dataset = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=False,
             num_workers=4, pin_memory=True)
         # input: [N*5, 512, 512] + int(label)
@@ -46,7 +46,7 @@ def ramris_pred_runner(data_dir='', target_category:Union[None, int, str, list]=
             depth = 20
         else:
             depth = 5
-        in_channel = len(target_site) * len(target_dirc) * depth   # input is a (5*site*dirc) * 512 * 512 img
+        group_num = len(target_site) * len(target_dirc)   # input is a (5*site*dirc) * 512 * 512 img
         out_ch = 0
         output_matrix = [[15, 15, 3, 10],[8, 8, 4, 8],[10, 10, 5, 10]]
         site_order = {'Wrist':0, 'MCP':1, 'Foot':2}
@@ -56,9 +56,14 @@ def ramris_pred_runner(data_dir='', target_category:Union[None, int, str, list]=
                 target_biomarker = ['ERO', 'BME', 'SYN', 'TSY']
             for biomarker in target_biomarker:
                 out_ch += output_matrix[site_order[site]][bio_order[biomarker]]
-        width = 2
-        model = ModelClip(in_channel, out_ch=out_ch, dimension=2, group_cap=depth, width=2)  
-        summary(model, (40, 512, 512))
+        if dimension==2:
+            width = 2
+            model = ModelClip(group_num=group_num, group_cap=depth, out_ch=out_ch, width=width, dimension=dimension)  
+            summary(model, (40, 512, 512))
+        elif dimension==3:
+            width = 1
+            model = ModelClip(group_num=group_num, group_cap=depth, out_ch=out_ch, width=width, dimension=dimension)  
+            summary(model, (2, 20, 512, 512))
 
         weight_path = output_finder(target_category, target_site, target_dirc, fold_order)
         mid_path = 'ALLBIO' if (target_category is None or len(target_category)>1) else f'ALL{target_category[0]}'
