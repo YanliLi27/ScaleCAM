@@ -37,7 +37,8 @@ from predefined.ramris_components.generators.dataset.utils.resample import resam
 class ESMIRA_generator:
     def __init__(self, data_root:str, target_category:list=['EAC', 'ATL'], target_site:list=['Wrist'], target_dirc:list=['TRA', 'COR'],
                  target_reader:list=['Reader1', 'Reader2'], target_biomarker:Union[list, None]=None, task_mode:str='class',
-                 print_flag:bool=False) ->None:
+                 working_dir:str='.', print_flag:bool=False) ->None:
+        self.working_dir = working_dir
         self.print_flag = print_flag
         # ----------------------------------------------------- id initialization ----------------------------------------------------- #
         # The common ids: common_list is the dict of EAC/CSA/ATL, that patients exist in all target_site
@@ -63,8 +64,8 @@ class ESMIRA_generator:
         for site in target_site:
             for biomarker in target_biomarker:
                 self.len_ramris_site += output_matrix[site_order[site]][bio_order[biomarker]]
-        self.default_id_path = 'D:\\ESMIRAcode\\RA_CLIP\\generators/scanner/logs/id_list.pkl'
-        self.default_df_path = 'D:\\ESMIRAcode\\RA_CLIP\\generators/scanner/logs/utli_df.pkl'
+        self.default_id_path = f'{self.working_dir}/generators/scanner/logs/id_list.pkl'
+        self.default_df_path = f'{self.working_dir}/generators/scanner/logs/utli_df.pkl'
         if os.path.isfile(self.default_id_path):
             with open(self.default_id_path, "rb") as tf:
                 self.common_dict = pickle.load(tf)
@@ -124,11 +125,13 @@ class ESMIRA_generator:
                 t_a_ratio = len(target_id_list) // len(atlas_id_list)
                 a_t_ratio = len(atlas_id_list) // len(target_id_list)
                 if t_a_ratio > 1:
+                    # t_a_ratio = np.minimum(t_a_ratio, 3)
                     target_id_split_balanced = target_id_split
                     atlas_id_split_balanced = []
                     for split in atlas_id_split:
                         atlas_id_split_balanced.append(split*t_a_ratio)
                 elif t_a_ratio <= 0:
+                    # a_t_ratio = np.minimum(a_t_ratio, 3)
                     atlas_id_split_balanced = atlas_id_split
                     target_id_split_balanced = []
                     for split in target_id_split:
@@ -405,7 +408,7 @@ class ESMIRA_generator:
             target_name = 1
         else:
             target_name = 0
-        output_name = "D:\\ESMIRAcode\\RA_CLIP\\generators/scanner/recover/{}_{}_{}_{}.pkl".format(cate_name, site_name, reader_name, target_name)
+        output_name = "{}/generators/scanner/recover/{}_{}_{}_{}.pkl".format(self.working_dir, cate_name, site_name, reader_name, target_name)
         return output_name
 
 
@@ -432,9 +435,13 @@ class ESMIRA_generator:
         else:
             target_name = 0
         if target_biomarker:
-            output_name = "D:\\ESMIRAcode\\RA_CLIP\\generators/scanner/recover/{}_{}_{}_{}_{}_{}.pkl".format(cate_name, site_name, target_biomarker[0], reader_name, target_name, keyword)
+            if len(target_biomarker) > 1:
+                t_b = 'allbio'
+            else:
+                t_b = target_biomarker[0]
+            output_name = "{}/generators/scanner/recover/{}_{}_{}_{}_{}_{}.pkl".format(self.working_dir, cate_name, site_name, t_b, reader_name, target_name, keyword)
         else:
-            output_name = "D:\\ESMIRAcode\\RA_CLIP\\generators/scanner/recover/{}_{}_{}_{}_{}.pkl".format(cate_name, site_name, reader_name, target_name, keyword)
+            output_name = "{}/generators/scanner/recover/{}_{}_{}_{}_{}.pkl".format(self.working_dir, cate_name, site_name, reader_name, target_name, keyword)
         return output_name
 
 
@@ -473,7 +480,7 @@ class ESMIRA_generator:
         # -> output: float, float
         array_val = np.asarray(val_mse_list)  # [num_id, num_site, num_ramris_in_site (1)]
         array_all = np.asarray((train_mse_list + val_mse_list))
-        print(array_val.shape)
+        print('the score shape:', array_val.shape)
         val_mse = np.mean(array_val).astype(np.float32)
         overall_mse = np.mean(array_all).astype(np.float32)
 
@@ -487,7 +494,7 @@ class ESMIRA_generator:
         return overall_mse, val_mse, split_all_mse, split_val_mse
     
 
-    def _corr_printer(self, score_array, mse_array, fig_path:str=f'D:\\ESMIRAcode\\RA_CLIP\\generators/background/dist.jpg', num_scores_per_site:int=43) -> Tuple[str, str, np.float32, np.float32]:
+    def _corr_printer(self, score_array, mse_array, fig_path:str=f'./generators/background/dist.jpg', num_scores_per_site:int=43) -> Tuple[str, str, np.float32, np.float32]:
         # score_array -- [batch/num_patients, num_scores_per_site]
         if not os.path.exists(os.path.dirname(fig_path)):
             os.makedirs(os.path.dirname(fig_path))
@@ -527,15 +534,14 @@ class ESMIRA_generator:
         array_reader2 = np.sum(array_reader2, axis=1)
         # get the correlation
         corr_mse_score, p_value = corr_calculator(array_reader1, array_reader2, array_ramris.shape[1], division=None)
-        if self.print_flag:
-            print('dataset readers correlation:', corr_mse_score)
-            print('correlation p value:', p_value)
+        print('dataset readers correlation:', corr_mse_score)
+        print('correlation p value:', p_value)
         sca_calculator(Garray=array_reader1, Parray=array_reader2, num_scores_per_site=array_ramris.shape[1],
-                        division=False, save_path=f'D:\\ESMIRAcode\\RA_CLIP\\generators/background/scatter_gt_pr.jpg')
+                        division=False, save_path=f'{self.working_dir}/generators/background/scatter_gt_pr.jpg')
 
 
     def returner(self, task_mode:str='clip', phase:str='train', fold_order:int=0, material:Union[str, list]='img',
-                 monai:bool=False, full_img:bool=False) ->Tuple[Union[None, Dataset], Dataset]:
+                 monai:bool=False, full_img:bool=False, dimension:int=2) ->Tuple[Union[None, Dataset], Dataset]:
         if monai:
             from monai import transforms
             transform = [transforms.Compose([
@@ -566,15 +572,15 @@ class ESMIRA_generator:
                                         ])]
         
         if task_mode == 'clip':
-            return self._clip_returner(phase, fold_order, transform, full_img)
+            return self._clip_returner(phase, fold_order, transform, full_img, dimension)
         elif task_mode == 'class':
-            return self._class_returner(phase, fold_order, material, transform)
+            return self._class_returner(phase, fold_order, material, transform, dimension)
         elif task_mode == 'multi':
-            return self._multi_returner(phase, fold_order, material, transform)
+            return self._multi_returner(phase, fold_order, material, transform, dimension)
 
 
     def _clip_returner(self, phase:str='train', fold_order:int=0, transform=[None, None],
-                       full_img:bool=False) ->Tuple[Union[None, Dataset], Dataset]:
+                       full_img:bool=False, dimension:int=2) ->Tuple[Union[None, Dataset], Dataset]:
         if phase=='train':
             train_img_list, val_img_list = self._split_definer(self.target_img_split, fold_order) 
             train_ramris_list, val_ramris_list = self._split_definer(self.target_ramris_split, fold_order) 
@@ -587,37 +593,36 @@ class ESMIRA_generator:
             #       resampler(val_img_list, val_ramris_list, val_mse_list)
 
             # statistic
-            overall_mse, val_mse, split_all_mse, split_val_mse = self._mse_printer(train_mse_list, val_mse_list, self.len_ramris_site)
             if self.print_flag:
+                overall_mse, val_mse, split_all_mse, split_val_mse = self._mse_printer(train_mse_list, val_mse_list, self.len_ramris_site)
                 print(f'overall mse: {overall_mse}, val mse: {val_mse}')
                 print(f'overall split mse: {split_all_mse}')
                 print(f'val split mse: {split_val_mse}')
-            distri_all_path, corr_mse_score, p_value = self._corr_printer(np.asarray((train_ramris_list)), 
+                distri_all_path, corr_mse_score, p_value = self._corr_printer(np.asarray((train_ramris_list)), 
                                                                           np.asarray((train_mse_list)),
-                                                                          fig_path=f'D:\\ESMIRAcode\\RA_CLIP\\models/figs/fold_{fold_order}/train_{phase}_{fold_order}_dist.jpg',
+                                                                          fig_path=f'{self.working_dir}/models/figs/fold_{fold_order}/train_{phase}_{fold_order}_dist.jpg',
                                                                           num_scores_per_site=self.len_ramris_site)
-            distri_val_path, val_corr_mse_score, val_p_value = self._corr_printer(np.asarray(val_ramris_list), 
+                distri_val_path, val_corr_mse_score, val_p_value = self._corr_printer(np.asarray(val_ramris_list), 
                                                                                   np.asarray(val_mse_list),
-                                                                                  fig_path=f'D:\\ESMIRAcode\\RA_CLIP\\models/figs/fold_{fold_order}/val_{phase}_{fold_order}_dist.jpg',
+                                                                                  fig_path=f'{self.working_dir}/models/figs/fold_{fold_order}/val_{phase}_{fold_order}_dist.jpg',
                                                                                   num_scores_per_site=self.len_ramris_site)
-            if self.print_flag:
                 print(f'distribution of ramris in all set saved in {distri_all_path}, in val set saved in {distri_val_path}')
                 print(f'corr of mse and rmaris in all is: {corr_mse_score}, p value is: {p_value}')
                 print(f'for val the corr is {val_corr_mse_score}, val p value: {val_p_value}')
 
             # dataset
-            train_dataset = CLIPDataset(self.data_root, train_img_list, train_ramris_list, transform[0], full_img)
-            val_dataset = CLIPDataset(self.data_root, val_img_list, val_ramris_list, transform[1], full_img)
+            train_dataset = CLIPDataset(self.data_root, train_img_list, train_ramris_list, transform[0], full_img, dimension=dimension)
+            val_dataset = CLIPDataset(self.data_root, val_img_list, val_ramris_list, transform[1], full_img, dimension=dimension)
         else:
             val_img_list = self._val_split_definer(self.target_img_split)
             val_ramris_list = self._val_split_definer(self.target_ramris_split)
-            val_dataset = CLIPDataset(self.data_root, val_img_list, val_ramris_list, transform[1], full_img)
+            val_dataset = CLIPDataset(self.data_root, val_img_list, val_ramris_list, transform[1], full_img, dimension=dimension)
             train_dataset = None
         return train_dataset, val_dataset  
 
     
     def _class_returner(self, phase:str='train', fold_order:int=0, material:Union[str, list]='img',
-                        transform=[None, None]) ->Tuple[Union[None, Dataset], Dataset]:
+                        transform=[None, None], dimension:int=2) ->Tuple[Union[None, Dataset], Dataset]:
         assert material.lower() in ['all', 'img', 'ramris']
         if phase=='train':
             target_train_img_list, target_val_img_list = self._split_definer(self.target_img_split, fold_order) 
@@ -628,8 +633,10 @@ class ESMIRA_generator:
             atlas_train_ramris_list, atlas_val_ramris_list = self._split_definer(self.atlas_ramris_split, fold_order)
             train_ramris_list, _ = self._ta_mixer(target_train_ramris_list, atlas_train_ramris_list)
             val_ramris_list, _ = self._ta_mixer(target_val_ramris_list, atlas_val_ramris_list)
-            train_dataset = ESMIRADataset(self.data_root, train_img_list, train_ramris_list, train_label, material, transform[0])
-            val_dataset = ESMIRADataset(self.data_root, val_img_list, val_ramris_list, val_label, material, transform[1])
+            train_dataset = ESMIRADataset(self.data_root, train_img_list, train_ramris_list, train_label,
+                                           material, transform[0], dimension=dimension)
+            val_dataset = ESMIRADataset(self.data_root, val_img_list, val_ramris_list, val_label,
+                                         material, transform[1], dimension=dimension)
         else:
             target_val_img_list = self._val_split_definer(self.target_img_split)
             atlas_val_img_list = self._val_split_definer(self.atlas_img_split)
@@ -637,14 +644,15 @@ class ESMIRA_generator:
             target_val_ramris_list = self._val_split_definer(self.target_ramris_split)
             atlas_val_ramris_list = self._val_split_definer(self.atlas_ramris_split)
             val_ramris_list, val_label = self._ta_mixer(target_val_ramris_list, atlas_val_ramris_list)
-            val_dataset = ESMIRADataset(self.data_root, val_img_list, val_ramris_list, val_label, material, transform[1])
+            val_dataset = ESMIRADataset(self.data_root, val_img_list, val_ramris_list, val_label,
+                                         material, transform[1], dimension=dimension)
             train_dataset = None
         return train_dataset, val_dataset 
     
 
     def _multi_returner(self, phase:str='train', fold_order:int=0, material:Union[str, list]='img',
-                        transform=[None, None]) ->Tuple[Union[None, Dataset], Dataset]:
-        assert material.lower() in ['img', 'ramris']
+                        transform=[None, None], dimension:int=2) ->Tuple[Union[None, Dataset], Dataset]:
+        assert material in ['img', 'ramris'] or material==['img', 'ramris']
         if phase=='train':
             target_train_img_list, target_val_img_list = self._split_definer(self.target_img_split, fold_order) 
             atlas_train_img_list, atlas_val_img_list = self._split_definer(self.atlas_img_split, fold_order)
@@ -654,8 +662,10 @@ class ESMIRA_generator:
             atlas_train_ramris_list, atlas_val_ramris_list = self._split_definer(self.atlas_ramris_split, fold_order)
             train_ramris_list, _ = self._ta_mixer(target_train_ramris_list, atlas_train_ramris_list)
             val_ramris_list, _ = self._ta_mixer(target_val_ramris_list, atlas_val_ramris_list)
-            train_dataset = ESMIRADataset(self.data_root, train_img_list, train_ramris_list, train_label, material, transform[0])
-            val_dataset = ESMIRADataset(self.data_root, val_img_list, val_ramris_list, val_label, material, transform[1])
+            train_dataset = ESMIRADataset(self.data_root, train_img_list, train_ramris_list, train_label,
+                                           material, transform[0], dimension=dimension)
+            val_dataset = ESMIRADataset(self.data_root, val_img_list, val_ramris_list, val_label,
+                                         material, transform[1], dimension=dimension)
         else:
             target_val_img_list = self._val_split_definer(self.target_img_split)
             atlas_val_img_list = self._val_split_definer(self.atlas_img_split)
@@ -663,7 +673,8 @@ class ESMIRA_generator:
             target_val_ramris_list = self._val_split_definer(self.target_ramris_split)
             atlas_val_ramris_list = self._val_split_definer(self.atlas_ramris_split)
             val_ramris_list, val_label = self._ta_mixer(target_val_ramris_list, atlas_val_ramris_list)
-            val_dataset = ESMIRADataset(self.data_root, val_img_list, val_ramris_list, val_label, material, transform[1])
+            val_dataset = ESMIRADataset(self.data_root, val_img_list, val_ramris_list, val_label,
+                                         material, transform[1], dimension=dimension)
             train_dataset = None
         return train_dataset, val_dataset 
 

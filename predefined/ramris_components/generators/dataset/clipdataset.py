@@ -9,7 +9,7 @@ import torch
 
 class CLIPDataset(data.Dataset):
     def __init__(self, data_root:str, img_list:list, ramris_list:list,
-                 transform=None, full_img:bool=False):
+                 transform=None, full_img:bool=False, dimension:int=2):
         self.root = data_root  # the root of data
         self.img_list = img_list  # [ID[PATHS OF IMG], ...]
         self.ramris_list = ramris_list  # [ID[SCORES], ...]
@@ -18,6 +18,7 @@ class CLIPDataset(data.Dataset):
         else:
             self.transform = None
         self.full_img = full_img
+        self.dimension = dimension
     
     def __len__(self):
         return len(self.img_list)
@@ -32,7 +33,11 @@ class CLIPDataset(data.Dataset):
             data[i] = torch.from_numpy(data[i])
             if self.transform is not None:
                 data[i] = self.transform(data[i])
-        data = torch.vstack(data)
+        # data list [tensors]
+        if self.dimension==2:
+            data = torch.vstack(data)
+        else:
+            data = torch.Tensor(data)  # [Site*TRA/COR, slice/depth, length, width]
         return data, scores 
 
 

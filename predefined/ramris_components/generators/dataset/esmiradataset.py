@@ -8,7 +8,8 @@ from typing import Union
 
 
 class ESMIRADataset(data.Dataset):
-    def __init__(self, data_root:str, img_list:list, ramris_list:list, label:list, material:Union[str, list]='img', transform=None):
+    def __init__(self, data_root:str, img_list:list, ramris_list:list, label:list, material:Union[str, list]='img', transform=None,
+                 dimension:int=2):
         self.root = data_root
         self.img_list = img_list
         self.ramris_list = ramris_list
@@ -19,6 +20,8 @@ class ESMIRADataset(data.Dataset):
             self.transform = transform
         else:
             self.transform = None
+        
+        self.dimension = dimension
 
 
     def __len__(self):
@@ -34,7 +37,10 @@ class ESMIRADataset(data.Dataset):
                 img[i] = torch.from_numpy(img[i])
                 if self.transform is not None:
                     img[i] = self.transform(img[i])
-            img = torch.vstack(img)
+            if self.dimension==2:
+                img = torch.vstack(img)
+            else:
+                img = torch.Tensor(img)
             # ramris load
             ramris = self._load_ramris_file(idx)
             return img, ramris, label.astype(np.int64)
