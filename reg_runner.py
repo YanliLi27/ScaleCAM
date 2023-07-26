@@ -66,7 +66,7 @@ def ramris_pred_runner(data_dir='', target_category:Union[None, int, str, list]=
             summary(model, (2, 20, 512, 512))
 
         weight_path = output_finder(target_category, target_site, target_dirc, fold_order)
-        mid_path = 'ALLBIO' if (target_category is None or len(target_category)>1) else f'ALL{target_category[0]}'
+        mid_path = 'ALLBIO' if (target_category is None or len(target_biomarker)>1) else f'ALL{target_biomarker[0]}'
         weight_abs_path = os.path.join(f'D:\\ESMIRAcode\\RA_CLIP\\models\\weights\\{mid_path}', weight_path)
         if os.path.isfile(weight_abs_path):
             checkpoint = torch.load(weight_abs_path)

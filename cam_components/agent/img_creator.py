@@ -47,16 +47,15 @@ def origin_creator(img:torch.Tensor, organ_groups:int=1, compress:bool=True):
 
 
 def cam_creator(grayscale_cam, predict_category, confidence, organ_groups, origin_img, use_origin:bool=True):
-    single_grayscale_cam, single_predict_category, single_confidence = grayscale_cam, predict_category, confidence
     cam_image_group_list = []
     for j in range(organ_groups):
-        grayscale_cam_group = single_grayscale_cam[j, :]
+        grayscale_cam_group = grayscale_cam[j, :]
         cam_image_group = show_cam_on_image(origin_img[j], grayscale_cam_group, use_rgb=True, use_origin=use_origin)
         cam_image_group = cv2.cvtColor(cam_image_group, cv2.COLOR_RGB2BGR)
         cam_image_group_list.append(cam_image_group)
     
-    output_label = single_predict_category
-    cf_num = str(np.around(single_confidence, decimals=3))
+    output_label = predict_category
+    cf_num = str(np.around(confidence, decimals=3))
     origin_list = []
     for img in origin_img:  # img_color_group [batch, organ_groups, y, x, 3] 
         origin_list.append(img * 255)  # img - [L, W]
