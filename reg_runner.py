@@ -10,7 +10,8 @@ def ramris_pred_runner(data_dir='', target_category:Union[None, int, str, list]=
                  target_biomarker=['SYN'],
                  target_reader=['Reader1', 'Reader2'], task_mode='clip', phase='train',
                  full_img:bool=True, dimension:int=2,
-                 target_output:Union[None, int, str, list]=[0]):
+                 target_output:Union[None, int, str, list]=[0],
+                 cluster:Union[None, list]=[15, 3, 10], cluster_start:int=0):
     # -------------------------------- optional: -------------------------------- #
     batch_size:int=2
     target_category:Union[None, int, str, list]=target_category  # info of the running process
@@ -65,14 +66,14 @@ def ramris_pred_runner(data_dir='', target_category:Union[None, int, str, list]=
             model = ModelClip(group_num=group_num, group_cap=depth, out_ch=out_ch, width=width, dimension=dimension)  
             summary(model, (2, 20, 512, 512))
 
-        weight_path = output_finder(target_category, target_site, target_dirc, fold_order)
-        mid_path = 'ALLBIO' if (target_category is None or len(target_biomarker)>1) else f'ALL{target_biomarker[0]}'
+        weight_path = output_finder(target_biomarker, target_site, target_dirc, fold_order)
+        mid_path = 'ALLBIO' if (target_biomarker is None or len(target_biomarker)>1) else f'ALL{target_biomarker[0]}'
         weight_abs_path = os.path.join(f'D:\\ESMIRAcode\\RA_CLIP\\models\\weights\\{mid_path}', weight_path)
         if os.path.isfile(weight_abs_path):
             checkpoint = torch.load(weight_abs_path)
             model.load_state_dict(checkpoint)
         else:
-            raise ValueError('weights not exist')
+            raise ValueError(f'weights not exist: {weight_abs_path}')
  
         target_layer = [model.encoder_class.Conv4]
         # --------------------------------------- model --------------------------------------- #
@@ -114,5 +115,5 @@ def ramris_pred_runner(data_dir='', target_category:Union[None, int, str, list]=
                                         )
                         Agent.analyzer_main()
                         Agent.creator_main(eval_act=False, mm_ratio=2, use_origin=True, 
-                                           cluster=[15, 3, 10], cluster_start=15,
+                                           cluster=cluster, cluster_start=cluster_start,
                                            tanh_flag=tanh_flag)
