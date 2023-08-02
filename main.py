@@ -23,11 +23,21 @@ if __name__ == '__main__':
     #              target_reader=['Reader1', 'Reader2'], task_mode='clip', phase='train',
     #              full_img=True, dimension=2,
     #              target_output=list_of_output)
-    list_of_output = [item for item in range(10)]
+
+    # list_of_output = [item for item in range(10)]
+    # ramris_pred_runner(data_dir='D:\\ESMIRA\\ESMIRA_common', target_category=None, 
+    #              target_site=['Wrist'], target_dirc=['TRA', 'COR'],
+    #              target_biomarker=['TSY'],
+    #              target_reader=['Reader1', 'Reader2'], task_mode='clip', phase='train',
+    #              full_img=True, dimension=2,
+    #              target_output=list_of_output,
+    #              cluster=None, cluster_start=0)
+
+    list_of_output = [item for item in range(15)]
     ramris_pred_runner(data_dir='D:\\ESMIRA\\ESMIRA_common', target_category=None, 
                  target_site=['Wrist'], target_dirc=['TRA', 'COR'],
-                 target_biomarker=['TSY'],
+                 target_biomarker=['BME'],
                  target_reader=['Reader1', 'Reader2'], task_mode='clip', phase='train',
                  full_img=True, dimension=2,
                  target_output=list_of_output,
-                 cluster=None, cluster_start=0)
+                 cluster=None, cluster_start=0, tanh=False)

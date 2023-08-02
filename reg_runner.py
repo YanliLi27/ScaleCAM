@@ -11,7 +11,8 @@ def ramris_pred_runner(data_dir='', target_category:Union[None, int, str, list]=
                  target_reader=['Reader1', 'Reader2'], task_mode='clip', phase='train',
                  full_img:bool=True, dimension:int=2,
                  target_output:Union[None, int, str, list]=[0],
-                 cluster:Union[None, list]=[15, 3, 10], cluster_start:int=0):
+                 cluster:Union[None, list]=[15, 3, 10], cluster_start:int=0,
+                 tanh:bool=True):
     # -------------------------------- optional: -------------------------------- #
     batch_size:int=2
     target_category:Union[None, int, str, list]=target_category  # info of the running process
@@ -97,7 +98,7 @@ def ramris_pred_runner(data_dir='', target_category:Union[None, int, str, list]=
             for im in im_selection_mode_zoo:
                 for mm in maxmin_flag_zoo:
                     for rm in remove_minus_flag_zoo:
-                        if mm:
+                        if mm and tanh:
                             tanh_flag = True
                         else:
                             tanh_flag = False
