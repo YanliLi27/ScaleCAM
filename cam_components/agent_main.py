@@ -161,6 +161,7 @@ class CAMAgent:
         
         model = self.model.to(device=device)
         model.eval()
+        cuda_flag = True if device=='cuda' else False
 
         for x,y in tqdm(self.dataset):
             x = x.to(dtype=torch.float32).to(device)
@@ -168,7 +169,7 @@ class CAMAgent:
             with self.cam_method[0](model=model,
                                     ram=self.ram,
                                     target_layers=target_layers,
-                                    use_cuda=True) as cam:
+                                    use_cuda=cuda_flag) as cam:
                 grayscale_cam, predict_category, confidence, cam_grad_max_value, cam_grad_min_value\
                                                                                         = cam(input_tensor=x, 
                                                                                             target_category=target_category,
@@ -287,6 +288,7 @@ class CAMAgent:
         in_fold_counter = 0
         model = self.model.to(device=device)
         model.eval()
+        cuda_flag = True if device=='cuda' else False
 
         # -------------- start cam calculation -------------- #
         for x,y in tqdm(self.dataset):
@@ -315,7 +317,7 @@ class CAMAgent:
                                         target_layers=target_layer,
                                         ram=self.ram,
                                         importance_matrix=im_box[str(tc)],  # im -- [batch, organ_groups * channels] - [batch, 2 * N]
-                                        use_cuda=True,
+                                        use_cuda=cuda_flag,
                                         groups=self.groups,
                                         value_max=max_box[str(tc)],
                                         value_min=min_box[str(tc)],
@@ -511,6 +513,7 @@ class CAMAgent:
         in_fold_counter = 0
         model = self.model.to(device=device)
         model.eval()
+        cuda_flag = True if device=='cuda' else False
 
         # --- eval --- #
         counter = 0
@@ -542,7 +545,7 @@ class CAMAgent:
                                     target_layers=target_layer,
                                     ram=self.ram,
                                     importance_matrix=im,  # im -- [batch, organ_groups * channels] - [batch, 2 * N]
-                                    use_cuda=True,
+                                    use_cuda=cuda_flag,
                                     groups=self.groups,
                                     value_max=data_max_value,
                                     value_min=data_min_value,
