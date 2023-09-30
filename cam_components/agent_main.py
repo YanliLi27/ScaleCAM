@@ -34,6 +34,7 @@ class CAMAgent:
                 cam_method:str='gradcam', im_dir:str='./output/im/taskname', cam_dir:str='./output/cam/taskname',
                 # cam method and im paths and cam output
                 batch_size:int=1, target_category:Union[None, str, int, list]=1,  # info of the running process
+                load_target_category:Union[None, str, int, list]=1,
                 maxmin_flag:bool=False, remove_minus_flag:bool=True, # creator
                 im_selection_mode:str='all', im_selection_extra:float=0.05, # importance matrices attributes
                 max_iter=None,  # early stop
@@ -66,6 +67,10 @@ class CAMAgent:
 
         assert (target_category in ['GT', None] or type(target_category) == int or type(target_category)==list)
         self.target_category = target_category  # targeted category
+        self.load_target_category = load_target_category  # the load im for cam creator
+            # this could be None, int, list, when self.target_category == None
+            # None: get the prediction-related CAMs
+            # int&list: get the CAM for certain category
         self.groups = groups  # group convolution
         self.fold_order = fold_order  # if use cross-validation
 
@@ -211,6 +216,7 @@ class CAMAgent:
         # im_target - [num_classes, num_features]
         im_overall = im_overall / in_fold_counter
         im_target = im_target / in_fold_target_counter[:, None]
+        # TODO figure out how it works for None input
         for i in range(self.num_classes):
             im_diff[i] = im_target[i, :] - im_overall
 

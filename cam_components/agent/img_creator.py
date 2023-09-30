@@ -4,7 +4,7 @@ import cv2
 from cam_components.agent.image import show_cam_on_image
 
 
-def origin_creator(img:torch.Tensor, organ_groups:int=1, compress:bool=True):
+def origin_creator(img:torch.Tensor, organ_groups:int=1, compress:bool=True, depth_3dimg:int=5):
     B, C, L, W = img.shape  # # [batch, 3, y, x]
     if C == 3:
         array_img = img.data.numpy()  # 保存numpy版本用于他用d
@@ -24,13 +24,14 @@ def origin_creator(img:torch.Tensor, organ_groups:int=1, compress:bool=True):
                 for channel in range(3):
                     img_color_group[batches, slice, channel, :] = array_img[batches, :]
         img_color_group = img_color_group.transpose(0, 1, 3, 4, 2)
-    elif (C > 3 and compress==True):
+    elif (C > 3 and compress==True):  # for 3D medical images, 5 for the central 5 slices, 2 for the central 1.
+        # compress means choose the central one as the original image, and use it as the overlayed img
         array_img = img.data.numpy()  # [B, C, L, W]
         img_color_group = np.zeros([B, organ_groups, 3, L, W])
         for batches in range(B):
             for slice in range(organ_groups):  # [C, L, W]
                 for channel in range(3):
-                    img_color_group[batches, slice, channel, :] = array_img[batches, (slice*5+2),:]
+                    img_color_group[batches, slice, channel, :] = array_img[batches, (slice*depth_3dimg+depth_3dimg//2),:]
         img_color_group = img_color_group.transpose(0, 1, 3, 4, 2)        
     elif (C > 3 and compress==False):
         array_img = img.data.numpy().reshape(B, organ_groups, C//organ_groups, L, W)  # [B, OG, D, L, W]
