@@ -34,7 +34,6 @@ class CAMAgent:
                 cam_method:str='gradcam', im_dir:str='./output/im/taskname', cam_dir:str='./output/cam/taskname',
                 # cam method and im paths and cam output
                 batch_size:int=1, target_category:Union[None, str, int, list]=1,  # info of the running process
-                load_target_category:Union[None, str, int, list]=1,
                 maxmin_flag:bool=False, remove_minus_flag:bool=True, # creator
                 im_selection_mode:str='all', im_selection_extra:float=0.05, # importance matrices attributes
                 max_iter=None,  # early stop
@@ -67,10 +66,7 @@ class CAMAgent:
 
         assert (target_category in ['GT', None] or type(target_category) == int or type(target_category)==list)
         self.target_category = target_category  # targeted category
-        self.load_target_category = load_target_category  # the load im for cam creator
-            # this could be None, int, list, when self.target_category == None
-            # None: get the prediction-related CAMs
-            # int&list: get the CAM for certain category
+
         self.groups = groups  # group convolution
         self.fold_order = fold_order  # if use cross-validation
 
@@ -231,20 +227,31 @@ class CAMAgent:
         return im_overall, im_target, im_diff, cam_grad_max_matrix, cam_grad_min_matrix
 
 
-    def creator_main(self, eval_act:Union[bool, str]=False, mm_ratio:float=1.5, use_origin:bool=True,
+    def creator_main(self, creator_target_category:Union[None, str, int, list]='Default',
+                    # if wanted to target a category while the analyzer using None
+                    eval_act:Union[bool, str]=False, mm_ratio:float=1.5, use_origin:bool=True,
                     cluster:Union[None, str, list]=None, cluster_start:int=0,
                     tanh_flag:bool=False, backup_flag:bool=False, img_compress:bool=False):
         '''
         mm_ratio for better visuaization
         use_origin for overlay/or not
         '''
+        if creator_target_category=='Default':
+            creator_target_category = self.target_category
+             # the load im for cam creator
+            # this could be None, int, list, when self.target_category == None
+            # None: get the prediction-related CAMs, while the target_category for IM creation is None
+            # int&list: get the CAM for certain category, while the target_category for IM creation is None
+
         # step 3. pred step
         if type(self.target_category)==list:
             self._cam_creator_step_width(self.target_layer, mm_ratio, use_origin, backup_flag, tanh_flag,
-                                          cluster, cluster_start, compress=img_compress)
+                                        cluster, cluster_start, compress=img_compress,
+                                        creator_target_category=creator_target_category)
         else:
             self._cam_creator_step_depth(self.target_layer, mm_ratio, use_origin, backup_flag, eval_act, tanh_flag,
-                                         compress=img_compress)
+                                         compress=img_compress,
+                                         creator_target_category=creator_target_category)
         
 
     def _get_importances(self, im_path, mm_ratio):
@@ -277,13 +284,18 @@ class CAMAgent:
                                 t_max:float=0.95, t_min:float=0.05,
                                 # --- img function --- #
                                 compress:bool=False,
+                                creator_target_category:Union[None, str, int, list]='Default',
                                 device=torch.device("cuda" if torch.cuda.is_available() else "cpu")):
         
         # get importance matrices for each category
         im_box = {}
         max_box = {}
         min_box = {}
-        for tc in self.target_category:
+        if creator_target_category=='Default':
+            creator_target_category = self.target_category
+            print('use default and something goes wrong with previous assertion')
+        creator_tc = creator_target_category if self.target_category==None else self.target_category
+        for tc in creator_tc:
             assert type(tc)==int
             im_path = self._im_finder(tc)
             im_box[str(tc)], max_box[str(tc)], min_box[str(tc)] = self._get_importances(im_path, mm_ratio)
@@ -318,7 +330,7 @@ class CAMAgent:
             tc_score = []
             tc_nega_score = []
 
-            for tc in self.target_category:
+            for tc in creator_tc:
                 with self.cam_method[1](model=model,
                                         target_layers=target_layer,
                                         ram=self.ram,
@@ -359,7 +371,7 @@ class CAMAgent:
             # step
             # cluster for the multi-target CAM generation -- e.g. SYN/TSY/BME
             if type(cluster)==list:
-                assert np.sum(cluster)<=len(self.target_category)  # make sure the length equal
+                assert np.sum(cluster)<=len(creator_tc)  # make sure the length equal
                 assert len(cluster)<=3  # only 3 channels for RGB
                 # tc_cam for cluster -- [tc]
                 tc_cam = np.asarray(tc_cam)
@@ -395,11 +407,11 @@ class CAMAgent:
                                                                             tc_score[i], self.groups, origin_img[i], \
                                                                             use_origin=use_origin)
                             # save the cam
-                            save_name = os.path.join(cam_dir, f'fold{self.fold_order}_pr{output_label}_target{self.target_category[i]}_{in_fold_counter}_cf{cf_num}.jpg')
+                            save_name = os.path.join(cam_dir, f'fold{self.fold_order}_pr{output_label}_target{creator_tc[i]}_{in_fold_counter}_cf{cf_num}.jpg')
                             cv2.imwrite(save_name, concat_img_all)
                             # save the backup npy for further calculation
                             if backup_flag:
-                                backup_name = os.path.join(backup_dir, f'fold{self.fold_order}_pr{output_label}_target{self.target_category[i]}_{in_fold_counter}_cf{cf_num}.npy')
+                                backup_name = os.path.join(backup_dir, f'fold{self.fold_order}_pr{output_label}_target{creator_tc[i]}_{in_fold_counter}_cf{cf_num}.npy')
                                 np.save(backup_name, np.asarray({'img':origin_img[i],'cam':clustered_cam[i]}))
                                 # grayscale_cam [-batch- * [1(groups), 256, 256]]
                                 # origin_img [-batch-, organ_groups, channel=3, y, x]
@@ -508,12 +520,17 @@ class CAMAgent:
                                 eval_func:Union[bool, str]=False, tanh_flag:bool=False, t_max:float=0.95, t_min:float=0.05,
                                 # --- img function --- #
                                 compress:bool=False,
+                                creator_target_category:Union[None, str, int, list]='Default',
                                 device=torch.device("cuda" if torch.cuda.is_available() else "cpu")):
         # im related
         im_path = self._im_finder(self.target_category)
         im, data_max_value, data_min_value = self._get_importances(im_path, mm_ratio)
         # cam output path
-        cam_dir = self._cam_finder(self.target_category)
+        if creator_target_category=='Default':
+            creator_target_category = self.target_category
+            print('use default and something goes wrong with previous assertion')
+        creator_tc = creator_target_category if self.target_category==None else self.target_category
+        cam_dir = self._cam_finder(creator_tc)
 
         # for cam calculation
         in_fold_counter = 0
@@ -564,7 +581,7 @@ class CAMAgent:
 
                 grayscale_cam, predict_category, pred_score, nega_score = cam(input_tensor=x,
                                                                             gt=y,
-                                                                            target_category=self.target_category)
+                                                                            target_category=creator_tc)
                 # theory: grayscale_cam -- batch * (target_layer_aggregated)_array[groups, (depth), length, width]
                 # proved: grayscale_cam -- 16 * [1(groups), 256, 256] - batch * [1(groups), 256, 256]
     
@@ -649,7 +666,7 @@ class CAMAgent:
                     cam_pred = model(cam_input)
                     if eval_func == 'basic':
                         origin_category, single_origin_confidence = predict_category, pred_score
-                        _, single_cam_confidence = pred_score_calculator(x.shape[0], cam_pred, self.target_category,
+                        _, single_cam_confidence = pred_score_calculator(x.shape[0], cam_pred, creator_tc,
                                                                                     origin_pred_category=origin_category)
                         single_drop = torch.relu(torch.from_numpy(single_origin_confidence\
                                     - single_cam_confidence)).div(torch.from_numpy(single_origin_confidence) + 1e-7)
@@ -679,7 +696,7 @@ class CAMAgent:
             if self.num_classes>2:
                 reg_corr_cate_matrix = []
                 for item in corr_cate_matrix:
-                    if item==self.target_category:
+                    if item==creator_tc:
                         reg_corr_cate_matrix.append(1)
                     else:
                         reg_corr_cate_matrix.append(0)
