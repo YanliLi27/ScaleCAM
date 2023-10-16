@@ -2,7 +2,7 @@
 
 ## The code for "Towards more informative saliency maps for medical images" 
 
-> Thanks to https://github.com/frgfm/torch-cam and https://github.com/lucidrains/vit-pytorch for their functions.
+> Thanks to https://github.com/frgfm/torch-cam and https://github.com/jacobgil/pytorch-grad-cam for their functions.
 
 > Currently, default test support for MNIST, ILSVRC2012, Cats&Dogs, and other four public medical datasets. ESMIRA (private data) is not supported as it includes the information of patients.
 
