@@ -43,7 +43,6 @@
 ## Examples:
 
 > IM scaling, when your CAM targeting dogs
-![Example](/1.png "IM scaling, when your CAM targeting dogs")
 
 
 
