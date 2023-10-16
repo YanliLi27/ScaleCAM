@@ -4,7 +4,7 @@
 
 > Thanks to https://github.com/frgfm/torch-cam and https://github.com/lucidrains/vit-pytorch for their functions.
 
-> Currently, support for MNIST, ILSVRC2012, Cats&Dogs. ESMIRA (private data) is not supported as it includes the information of patients.
+> Currently, default test support for MNIST, ILSVRC2012, Cats&Dogs, and other four public medical datasets. ESMIRA (private data) is not supported as it includes the information of patients.
 
 
 ## Use:
