@@ -541,6 +541,7 @@ class CAMAgent:
         # --- eval --- #
         counter = 0
         assert eval_func in [False, 'false', 'basic', 'logit', 'corr']
+        logit_flag = False
         if eval_func == 'corr':
             corr_cam_matrix = []
             corr_cate_matrix = []
@@ -548,6 +549,9 @@ class CAMAgent:
         elif eval_func in ['logit', 'basic']:
             increase = 0.0
             drop = 0.0
+            if eval_func in ['logit']:
+                logit_flag = True
+
         # --- eval --- #
 
         # -------------- start cam calculation -------------- #
@@ -573,7 +577,7 @@ class CAMAgent:
                                     value_max=data_max_value,
                                     value_min=data_min_value,
                                     remove_minus_flag=self.remove_minus_flag,
-                                    out_logit=False,
+                                    out_logit=logit_flag,
                                     tanh_flag=tanh_flag,
                                     t_max=t_max,
                                     t_min=t_min
@@ -584,6 +588,7 @@ class CAMAgent:
                                                                             target_category=creator_tc)
                 # theory: grayscale_cam -- batch * (target_layer_aggregated)_array[groups, (depth), length, width]
                 # proved: grayscale_cam -- 16 * [1(groups), 256, 256] - batch * [1(groups), 256, 256]
+                # pred_score -- while logit: logit, while basic: softmaxed logit
     
                 # ---------------------------------------  cam create  --------------------------------------- #
                 if not os.path.exists(cam_dir):
@@ -666,8 +671,9 @@ class CAMAgent:
                     cam_pred = model(cam_input)
                     if eval_func == 'basic':
                         origin_category, single_origin_confidence = predict_category, pred_score
-                        _, single_cam_confidence = pred_score_calculator(x.shape[0], cam_pred, creator_tc,
-                                                                                    origin_pred_category=origin_category)
+                        _, single_cam_confidence, _ = pred_score_calculator(x.shape[0], cam_pred, creator_tc,
+                                                                                    origin_pred_category=origin_category,
+                                                                                    out_logit=False)
                         single_drop = torch.relu(torch.from_numpy(single_origin_confidence\
                                     - single_cam_confidence)).div(torch.from_numpy(single_origin_confidence) + 1e-7)
                     elif eval_func == 'logit':

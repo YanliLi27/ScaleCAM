@@ -7,13 +7,15 @@ import os
 def cam_regularizer(mask):
     mask = np.maximum(mask, 0)
     mask = np.minimum(mask, 1)
+    mask = mask - np.min(mask)/(np.max(mask)-np.min(mask)+1e-7)  # for dataset-level normalization
     return mask
 
 def cam_input_normalization(cam_input):
-    data_transform = transforms.Compose([
-                                        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-                                        ])
-    cam_input = data_transform(cam_input)
+    if cam_input.shape[1]==3:
+        data_transform = transforms.Compose([
+                                            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+                                            ])
+        cam_input = data_transform(cam_input)
     return cam_input
 
 
@@ -31,10 +33,12 @@ def pred_score_calculator(input_size, output, target_category=None, origin_pred_
             pred_scores = np.max(np_output, axis=-1)
             nega_scores = np.sum(np_output, axis=-1)
         else:
-            pred_scores = np.max(prob_predict_category, axis=-1)
+            # pred_scores = np.max(prob_predict_category, axis=-1)
+            arg = np.arange(0, prob_predict_category.shape[0])  # arg - batch_size[0, 1, ... , 16]
+            pred_scores = prob_predict_category[arg, target_category]  # [batch, 1000] -> [batch]
             nega_scores = None
-    elif target_category is int:
-        assert(len(target_category) == input_size)
+    elif type(target_category)==int:
+        # assert(len(target_category) == input_size)
         
         if out_logit:
             matrix_zero = np.zeros([len(np_output), prob_predict_category.shape[-1]], dtype=np.int8)
@@ -54,6 +58,8 @@ def pred_score_calculator(input_size, output, target_category=None, origin_pred_
         matrix_zero[list(range(len(np_output))), target_category] = 1
         pred_scores = np.max(matrix_zero* np_output, axis=-1)
         nega_scores = np.sum(np_output, axis=-1)
+    else:
+        raise TypeError(f'type of {target_category} is {type(target_category)}')
     return target_category, pred_scores, nega_scores  # both [batch_size, 1]
 
 
@@ -63,10 +69,10 @@ def text_save(save_path, increase, decrease, total_samples):
                 F.write('Increase and decrease:')
     with open(save_path, 'a') as F:
         F.write('\n')
-        F.write(f'total number: ', str(total_samples))  
+        F.write(f'total number: {str(total_samples)}')  
         F.write('\n')
-        F.write(f'increase: ', str(increase))
+        F.write(f'increase: {str(increase)}')
         F.write('\n')
-        F.write(f'decrease: ', str(decrease))
+        F.write(f'decrease: {str(decrease)}')
 
 
