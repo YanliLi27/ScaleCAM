@@ -7,7 +7,8 @@ import os
 def naturalimage_runner(target_category:Union[None, int, str]=None, model_flag:str='resnet',
                         task:str='CatsDogs', dataset_split:str='val',
                         max_iter=None, randomization=False, random_severity=0,
-                        eval_flag:str='basic'):
+                        eval_flag:str='basic', tan_flag:bool=False,
+                        cam_method:Union[list, None]=None):
     # -------------------------------- optional: -------------------------------- #
     batch_size:int=16
     target_category:Union[None, int, str]=target_category  # info of the running process
@@ -38,7 +39,10 @@ def naturalimage_runner(target_category:Union[None, int, str]=None, model_flag:s
     fold_order:int=0
 
     # -------------------------------- start loop -------------------------------- #
-    cam_method_zoo = ['gradcam', 'fullcam']# , 'gradcampp', 'xgradcam']
+    if cam_method==None:
+        cam_method_zoo = ['gradcam', 'fullcam', 'gradcampp', 'xgradcam']
+    else:
+        cam_method_zoo = cam_method
     # maxmin_flag_zoo = [True, False]  # intensity scaling
     # remove_minus_flag_zoo = [False, True]  # remove the part below zero, default: True in the original Grad CAM
     mm_rm_zoo =  [[False, True], [True, False]]
@@ -62,7 +66,7 @@ def naturalimage_runner(target_category:Union[None, int, str]=None, model_flag:s
                                 )
                 Agent.analyzer_main()
                 # Agent.creator_main(eval_act='corr', mm_ratio=5, use_origin=use_origin)# , tanh_flag=True)
-                Agent.creator_main(eval_act=eval_flag, mm_ratio=1.5, use_origin=use_origin)
+                Agent.creator_main(eval_act=eval_flag, mm_ratio=1.5, use_origin=use_origin, tanh_flag=tan_flag)
 
 
 def catsdog3d_runner(target_category:Union[None, int, str]=1, task:str='catsdogs3d', dataset_split:str='val'):    

@@ -6,15 +6,27 @@ if __name__ == '__main__':
     # for test
     task_zoo = ['CatsDogs', 'MNIST', 'Imagenet']
     model_zoo = {'CatsDogs':'vgg', 'Imagenet':'vgg', 'MNIST':'scratch_mnist'}
-    for task in task_zoo:
-        model = model_zoo[task]
-        naturalimage_runner(target_category=None, model_flag=model, task=task, dataset_split='val',
-                            max_iter=None, randomization=False, random_severity=0,
-                            eval_flag='logit')
-        # naturalimage_runner(target_category=1, model_flag=model, task=task, dataset_split='val',
-        #                     max_iter=None, randomization=False, random_severity=0,
-        #                     eval_flag='corr')
+    tc_zoo = {'CatsDogs':[0, 1], 'Imagenet':[999], 'MNIST':[4, 7]}
 
+    for task in task_zoo:
+        if task!='Imagenet':
+            tan_flag_zoo = [True, False]
+        else:
+            tan_flag_zoo = [False]
+        for tan_flag in tan_flag_zoo:
+            model = model_zoo[task]
+            tc = tc_zoo[task]
+            if task == 'Imagenet':
+                cam_method_zoo = ['gradcam', 'fullcam']
+            else:
+                cam_method_zoo = ['gradcam', 'fullcam', 'gradcampp', 'xgradcam']
+            naturalimage_runner(target_category=None, model_flag=model, task=task, dataset_split='val',
+                                max_iter=None, randomization=False, random_severity=0,
+                                eval_flag='basic', tan_flag=tan_flag, cam_method=cam_method_zoo)
+            for tc_s in tc:
+                naturalimage_runner(target_category=tc_s, model_flag=model, task=task, dataset_split='val',
+                                    max_iter=None, randomization=False, random_severity=0,
+                                    eval_flag='corr', tan_flag=tan_flag, cam_method=cam_method_zoo)
     # catsdog3d_runner(target_category=1, task='catsdogs3d', dataset_split='val')
 
     # medical_runner(target_category=1, task='luna', dataset_split='val')
