@@ -229,7 +229,8 @@ class CAMAgent:
 
     def creator_main(self, creator_target_category:Union[None, str, int, list]='Default',
                     # if wanted to target a category while the analyzer using None
-                    eval_act:Union[bool, str]=False, mm_ratio:float=1.5, use_origin:bool=True,
+                    eval_act:Union[bool, str]=False, mm_ratio:float=1.5, 
+                    cam_save:bool=True, use_origin:bool=True,
                     cluster:Union[None, str, list]=None, cluster_start:int=0,
                     tanh_flag:bool=False, backup_flag:bool=False, img_compress:bool=False):
         '''
@@ -249,7 +250,8 @@ class CAMAgent:
                                         cluster, cluster_start, compress=img_compress,
                                         creator_target_category=creator_target_category)
         else:
-            self._cam_creator_step_depth(self.target_layer, mm_ratio, use_origin, backup_flag, eval_act, tanh_flag,
+            self._cam_creator_step_depth(self.target_layer, mm_ratio, use_origin, cam_save=cam_save, 
+                                         backup_flag=backup_flag, eval_func=eval_act, tanh_flag=tanh_flag,
                                          compress=img_compress,
                                          creator_target_category=creator_target_category)
         
@@ -515,6 +517,7 @@ class CAMAgent:
                                 # --- optional functions --- #
                                 mm_ratio:float=1.5,
                                 use_origin:bool=True,
+                                cam_save:bool=True,
                                 backup_flag:bool=False,
                                 # --- eval --- #
                                 eval_func:Union[bool, str]=False, tanh_flag:bool=False, t_max:float=0.95, t_min:float=0.05,
@@ -613,7 +616,8 @@ class CAMAgent:
                         str_labels = (str(y.data.cpu().numpy()[i]))[:2]
                         save_name = os.path.join(cam_dir, f'fold{self.fold_order}_{in_fold_counter}_tr{str_labels}pr{output_label}_cf{cf_num}.jpg')
                         in_fold_counter += 1
-                        cv2.imwrite(save_name, concat_img_all)
+                        if cam_save:
+                            cv2.imwrite(save_name, concat_img_all)
 
                         # save the backup npy for further calculation
                         if backup_flag:
@@ -632,17 +636,17 @@ class CAMAgent:
                         save_name = os.path.join(cam_dir, f'fold{self.fold_order}_{in_fold_counter}_tr{str_labels}pr{output_label}_cf{cf_num}.nii.gz')
                         origin_save_name = save_name.replace('.nii.gz', '_ori.nii.gz')
                         in_fold_counter += 1
-
-                        for group_index in range(origin_img.shape[1]):
-                            save_name = save_name.replace('.nii.gz', '_p{}.nii.gz'.format(group_index))
-                            origin_save_name = origin_save_name.replace('.nii.gz', '_p{}.nii.gz'.format(group_index))
-                            writter = sitk.ImageFileWriter()
-                            writter.SetFileName(save_name)
-                            writter.Execute(sitk.GetImageFromArray(grayscale_cam[i][group_index]))
-                            # [batch, organ_groups, z, y, x, channel] to [batch, organ_groups, z, y, x]
-                            # TODO currently we just use the second layer of input:
-                            writter.SetFileName(origin_save_name)
-                            writter.Execute(sitk.GetImageFromArray(origin_img[i][group_index][1]))
+                        if cam_save:
+                            for group_index in range(origin_img.shape[1]):
+                                save_name = save_name.replace('.nii.gz', '_p{}.nii.gz'.format(group_index))
+                                origin_save_name = origin_save_name.replace('.nii.gz', '_p{}.nii.gz'.format(group_index))
+                                writter = sitk.ImageFileWriter()
+                                writter.SetFileName(save_name)
+                                writter.Execute(sitk.GetImageFromArray(grayscale_cam[i][group_index]))
+                                # [batch, organ_groups, z, y, x, channel] to [batch, organ_groups, z, y, x]
+                                # TODO currently we just use the second layer of input:
+                                writter.SetFileName(origin_save_name)
+                                writter.Execute(sitk.GetImageFromArray(origin_img[i][group_index][1]))
                     else:
                         raise ValueError(f'not supported shape: {grayscale_cam[i].shape}') 
                 # ---------------------------------------  cam create  --------------------------------------- #

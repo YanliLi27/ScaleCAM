@@ -8,7 +8,8 @@ def naturalimage_runner(target_category:Union[None, int, str]=None, model_flag:s
                         task:str='CatsDogs', dataset_split:str='val',
                         max_iter=None, randomization=False, random_severity=0,
                         eval_flag:str='basic', tan_flag:bool=False,
-                        cam_method:Union[list, None]=None):
+                        cam_method:Union[list, None]=None,
+                        cam_save:bool=True):
     # -------------------------------- optional: -------------------------------- #
     batch_size:int=16
     target_category:Union[None, int, str]=target_category  # info of the running process
@@ -66,7 +67,7 @@ def naturalimage_runner(target_category:Union[None, int, str]=None, model_flag:s
                                 )
                 Agent.analyzer_main()
                 # Agent.creator_main(eval_act='corr', mm_ratio=5, use_origin=use_origin)# , tanh_flag=True)
-                Agent.creator_main(eval_act=eval_flag, mm_ratio=1.5, use_origin=use_origin, tanh_flag=tan_flag)
+                Agent.creator_main(eval_act=eval_flag, mm_ratio=1.5, cam_save=cam_save, use_origin=use_origin, tanh_flag=tan_flag)
 
 
 def catsdog3d_runner(target_category:Union[None, int, str]=1, task:str='catsdogs3d', dataset_split:str='val'):    
@@ -123,7 +124,7 @@ def catsdog3d_runner(target_category:Union[None, int, str]=1, task:str='catsdogs
                     Agent.creator_main(eval_act='corr', mm_ratio=1.5, use_origin=use_origin, tanh_flag=True)
     
 
-def medical_runner(target_category:Union[None, int, str]=1, task:str='luna', dataset_split:str='val'):
+def medical_runner(target_category:Union[None, int, str]=1, task:str='luna', dataset_split:str='val', cam_save:bool=True):
     # -------------------------------- optional: -------------------------------- #
     batch_size:int=16
     target_category:Union[None, int, str]=target_category  # info of the running process
@@ -153,32 +154,34 @@ def medical_runner(target_category:Union[None, int, str]=1, task:str='luna', dat
 
         # -------------------------------- start loop -------------------------------- #
         cam_method_zoo = ['fullcam', 'gradcam', 'gradcampp', 'xgradcam']
-        maxmin_flag_zoo = [True, False]  # intensity scaling
-        remove_minus_flag_zoo = [False, True]  # remove the part below zero, default: True in the original Grad CAM
+        # maxmin_flag_zoo = [True, False]  # intensity scaling
+        # remove_minus_flag_zoo = [False, True]  # remove the part below zero, default: True in the original Grad CAM
+        mm_rm_zoo =  [[True, False], [False, True]]
         im_selection_mode_zoo = ['all', 'diff_top']  # use feature selection or not -- relied on the importance matrices
 
         for method in cam_method_zoo:
             for im in im_selection_mode_zoo:
-                for mm in maxmin_flag_zoo:
-                    for rm in remove_minus_flag_zoo:
-                        Agent = CAMAgent(model, target_layer, dataset,  
-                                        num_out_channel, num_classes,  
-                                        groups, fold_order, ram,
-                                        # optional:
-                                        cam_method=method, im_dir=im_dir, cam_dir=cam_dir, # cam method and im paths and cam output
-                                        batch_size=batch_size, target_category=target_category,  # info of the running process
-                                        maxmin_flag=mm, remove_minus_flag=rm, # creator
-                                        im_selection_mode=im, im_selection_extra=im_selection_extra, # importance matrices attributes
-                                        max_iter=max_iter,  # early stop
-                                        randomization=False, random_severity=0,  # model randomization for sanity check
-                                        use_pred=use_pred
-                                        )
-                        Agent.analyzer_main()
-                        Agent.creator_main(eval_act='corr', mm_ratio=1.5, use_origin=True)
+                for um in mm_rm_zoo:
+                    mm, rm = um
+                    Agent = CAMAgent(model, target_layer, dataset,  
+                                    num_out_channel, num_classes,  
+                                    groups, fold_order, ram,
+                                    # optional:
+                                    cam_method=method, im_dir=im_dir, cam_dir=cam_dir, # cam method and im paths and cam output
+                                    batch_size=batch_size, target_category=target_category,  # info of the running process
+                                    maxmin_flag=mm, remove_minus_flag=rm, # creator
+                                    im_selection_mode=im, im_selection_extra=im_selection_extra, # importance matrices attributes
+                                    max_iter=max_iter,  # early stop
+                                    randomization=False, random_severity=0,  # model randomization for sanity check
+                                    use_pred=use_pred
+                                    )
+                    Agent.analyzer_main()
+                    Agent.creator_main(eval_act='corr', mm_ratio=1.5, cam_save=cam_save, use_origin=True)
 
 
 def esmira_runner(target_category:Union[None, int, str]=1, data_dir:str='D:\\ESMIRA\\ESMIRA_common',
-                target_catename:list=['EAC','ATL'], target_site:list=['Wrist'], target_dirc:list=['TRA', 'COR']):
+                target_catename:list=['EAC','ATL'], target_site:list=['Wrist'], target_dirc:list=['TRA', 'COR'],
+                cam_save:bool=True):
     # -------------------------------- optional: -------------------------------- #
     batch_size:int=5
     target_category:Union[None, int, str]=target_category  # info of the running process
@@ -230,32 +233,33 @@ def esmira_runner(target_category:Union[None, int, str]=1, data_dir:str='D:\\ESM
 
         # -------------------------------- start loop -------------------------------- #
         cam_method_zoo = ['gradcam', 'fullcam', 'gradcampp', 'xgradcam']
-        maxmin_flag_zoo = [True, False]  # intensity scaling
-        remove_minus_flag_zoo = [False, True]  # remove the part below zero, default: True in the original Grad CAM
+        # maxmin_flag_zoo = [True, False]  # intensity scaling
+        # remove_minus_flag_zoo = [False, True]  # remove the part below zero, default: True in the original Grad CAM
+        mm_rm_zoo =  [[True, False], [False, True]]
         im_selection_mode_zoo = ['all', 'diff_top']  # use feature selection or not -- relied on the importance matrices
 
         for method in cam_method_zoo:
             for im in im_selection_mode_zoo:
-                for mm in maxmin_flag_zoo:
-                    for rm in remove_minus_flag_zoo:
-                        if mm:
-                            tanh_flag = True
-                        else:
-                            tanh_flag = False
-                        Agent = CAMAgent(model, target_layer, dataset,  
-                                        num_out_channel, num_classes,  
-                                        groups, fold_order, ram,
-                                        # optional:
-                                        cam_method=method, im_dir=im_dir, cam_dir=cam_dir, # cam method and im paths and cam output
-                                        batch_size=batch_size, target_category=target_category,  # info of the running process
-                                        maxmin_flag=mm, remove_minus_flag=rm, # creator
-                                        im_selection_mode=im, im_selection_extra=im_selection_extra, # importance matrices attributes
-                                        max_iter=max_iter,  # early stop
-                                        randomization=False, random_severity=0,  # model randomization for sanity check
-                                        use_pred=use_pred
-                                        )
-                        Agent.analyzer_main()
-                        Agent.creator_main(eval_act='corr', mm_ratio=2, use_origin=True, tanh_flag=tanh_flag)
+                for um in mm_rm_zoo:
+                    mm, rm = um
+                    if mm:
+                        tanh_flag = True
+                    else:
+                        tanh_flag = False
+                    Agent = CAMAgent(model, target_layer, dataset,  
+                                    num_out_channel, num_classes,  
+                                    groups, fold_order, ram,
+                                    # optional:
+                                    cam_method=method, im_dir=im_dir, cam_dir=cam_dir, # cam method and im paths and cam output
+                                    batch_size=batch_size, target_category=target_category,  # info of the running process
+                                    maxmin_flag=mm, remove_minus_flag=rm, # creator
+                                    im_selection_mode=im, im_selection_extra=im_selection_extra, # importance matrices attributes
+                                    max_iter=max_iter,  # early stop
+                                    randomization=False, random_severity=0,  # model randomization for sanity check
+                                    use_pred=use_pred
+                                    )
+                    Agent.analyzer_main()
+                    Agent.creator_main(eval_act='corr', mm_ratio=2, use_origin=True, tanh_flag=tanh_flag, cam_save=cam_save)
 
 
 def ramris_pred_runner(data_dir='', target_category=['EAC'], 
