@@ -26,7 +26,7 @@ if __name__ == '__main__':
             for tc_s in tc:
                 naturalimage_runner(target_category=tc_s, model_flag=model, task=task, dataset_split='val',
                                     max_iter=None, randomization=False, random_severity=0,
-                                    eval_flag='corr', tan_flag=tan_flag, cam_method=cam_method_zoo)
+                                    eval_flag='corr_logit', tan_flag=tan_flag, cam_method=cam_method_zoo)
     # catsdog3d_runner(target_category=1, task='catsdogs3d', dataset_split='val')
 
     # medical_runner(target_category=1, task='luna', dataset_split='val')

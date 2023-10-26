@@ -700,7 +700,7 @@ class CAMAgent:
                         break
 
         # --------------------------------------  cam evaluate  -------------------------------------- #
-        if eval_func in ['basic', 'logit']:
+        if eval_func in ['corr', 'corr_logit']:
             print('total samples:', counter)
             # cam分数和类别的AUROC，代表的是cam正确反映分类情况的能力
             # for mutliclasses, use pos-neg to calculate
