@@ -13,7 +13,7 @@ def naturalimage_runner(target_category:Union[None, int, str]=None, model_flag:s
     batch_size:int=16
     target_category:Union[None, int, str]=target_category  # info of the running process
     # more functions
-    im_selection_extra:float=0.05  # importance matrices attributes
+    im_selection_extra:float=0.3 if task=='Imagenet' else 0.05  # importance matrices attributes
     max_iter=max_iter  # early stop
     groups:int=1
     ram:bool=False  # if it's a regression task
@@ -45,7 +45,7 @@ def naturalimage_runner(target_category:Union[None, int, str]=None, model_flag:s
         cam_method_zoo = cam_method
     # maxmin_flag_zoo = [True, False]  # intensity scaling
     # remove_minus_flag_zoo = [False, True]  # remove the part below zero, default: True in the original Grad CAM
-    mm_rm_zoo =  [[False, True], [True, False]]
+    mm_rm_zoo =  [[True, False], [False, True]]
     im_selection_mode_zoo = ['all', 'diff_top']  # use feature selection or not -- relied on the importance matrices
 
     for method in cam_method_zoo:

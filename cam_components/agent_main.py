@@ -540,12 +540,17 @@ class CAMAgent:
 
         # --- eval --- #
         counter = 0
-        assert eval_func in [False, 'false', 'basic', 'logit', 'corr']
+        assert eval_func in [False, 'false', 'basic', 'logit', 'corr', 'corr_logit']
         logit_flag = False
         if eval_func == 'corr':
             corr_cam_matrix = []
             corr_cate_matrix = []
             corr_pred_matrix = []
+        elif eval_func == 'corr_logit':
+            corr_cam_matrix = []
+            corr_cate_matrix = []
+            corr_pred_matrix = []
+            logit_flag = True
         elif eval_func in ['logit', 'basic']:
             increase = 0.0
             drop = 0.0
@@ -643,12 +648,12 @@ class CAMAgent:
                 # ---------------------------------------  cam create  --------------------------------------- #
 
                 # --------------------------------------  cam evaluate  -------------------------------------- #
-                if eval_func == 'corr':
+                if eval_func in ['corr', 'corr_logit']:
                     grayscale_cam = np.array(grayscale_cam)  # # grayscale_cam -- 16 * [1, 256, 256] - batch * [1, 256, 256]
                     if tanh_flag and data_max_value:
                         para_k = (np.arctanh(t_max) - np.arctanh(t_min))/(data_max_value-data_min_value)
                         para_b = (np.arctanh(t_max)*data_min_value-np.arctanh(t_min)*data_max_value)/(data_min_value-data_max_value)
-                        grayscale_cam = (np.arctanh(grayscale_cam) - para_b)/para_k
+                        grayscale_cam = (np.arctanh(grayscale_cam+1e-10) - para_b)/(para_k + 1e-10)
                     # 3d grayscale cam -- 16 * [1, 5, 256, 256] - batch * [1, 5, 256, 256]
                     # batch_size * [group_num, (z,) y, x]
                     for i, single_cam in enumerate(grayscale_cam):  # 取单个进行计算和存储
@@ -695,7 +700,7 @@ class CAMAgent:
                         break
 
         # --------------------------------------  cam evaluate  -------------------------------------- #
-        if eval_func == 'corr':
+        if eval_func in ['basic', 'logit']:
             print('total samples:', counter)
             # cam分数和类别的AUROC，代表的是cam正确反映分类情况的能力
             # for mutliclasses, use pos-neg to calculate
@@ -707,6 +712,7 @@ class CAMAgent:
                     else:
                         reg_corr_cate_matrix.append(0)
                 corr_cate_matrix = reg_corr_cate_matrix
+            corr_cam_matrix = np.nan_to_num(corr_cam_matrix, copy=False, nan=0, posinf=0, neginf=0)
             auc = roc_auc_score(corr_cate_matrix, corr_cam_matrix)
             print('outlier rate-- AUROC of <CAM & Label>: ', auc)
             corr_dir = cam_dir.replace('./output/cam/', './output/figs/')

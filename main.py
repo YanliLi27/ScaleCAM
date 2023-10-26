@@ -3,10 +3,10 @@ from reg_runner import ramris_pred_runner
 
 
 if __name__ == '__main__':
-    # for test
-    task_zoo = ['CatsDogs', 'MNIST', 'Imagenet']
-    model_zoo = {'CatsDogs':'vgg', 'Imagenet':'vgg', 'MNIST':'scratch_mnist'}
-    tc_zoo = {'CatsDogs':[0, 1], 'Imagenet':[999], 'MNIST':[4, 7]}
+    # for test 
+    task_zoo = ['Imagenet'] #['MNIST', 'Imagenet','CatsDogs'] 
+    model_zoo = {'CatsDogs':'vgg', 'Imagenet':'resnet', 'MNIST':'scratch_mnist'}
+    tc_zoo = {'CatsDogs':[0, 1], 'Imagenet':[16,17,18,19], 'MNIST':[4, 7]}
 
     for task in task_zoo:
         if task!='Imagenet':
@@ -17,12 +17,12 @@ if __name__ == '__main__':
             model = model_zoo[task]
             tc = tc_zoo[task]
             if task == 'Imagenet':
-                cam_method_zoo = ['gradcam', 'fullcam']
+                cam_method_zoo = ['fullcam']
             else:
                 cam_method_zoo = ['gradcam', 'fullcam', 'gradcampp', 'xgradcam']
-            naturalimage_runner(target_category=None, model_flag=model, task=task, dataset_split='val',
-                                max_iter=None, randomization=False, random_severity=0,
-                                eval_flag='basic', tan_flag=tan_flag, cam_method=cam_method_zoo)
+            # naturalimage_runner(target_category=None, model_flag=model, task=task, dataset_split='val',
+            #                     max_iter=None, randomization=False, random_severity=0,
+            #                     eval_flag='basic', tan_flag=tan_flag, cam_method=cam_method_zoo)
             for tc_s in tc:
                 naturalimage_runner(target_category=tc_s, model_flag=model, task=task, dataset_split='val',
                                     max_iter=None, randomization=False, random_severity=0,
