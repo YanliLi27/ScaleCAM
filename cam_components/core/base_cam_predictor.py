@@ -318,7 +318,11 @@ class BaseCAM_P:
                 img = resize_fun(img[None,:,:,:])[0]  # z,y,x
                 img = img.numpy()
             else:
-                img = cv2.resize(img, target_size)  # for 2d image
+                if target_size[0]==target_size[1]:
+                    img = cv2.resize(img, target_size)  # for 2d image
+                else:
+                    img = cv2.resize(img, np.transpose(target_size, (1,0)))  # for 2d image
+                # img = cv2.resize(img, (256, 512))  # for 2d image
             result.append(img)
         result = np.float32(result)
 
@@ -340,7 +344,10 @@ class BaseCAM_P:
                 img = resize_fun(img[None,:,:,:])[0]  # z,y,x
                 img = img.numpy()
             else:
-                img = cv2.resize(img, target_size)  # for 2d image
+                if target_size[0]==target_size[1]:
+                    img = cv2.resize(img, target_size)  # for 2d image
+                else:
+                    img = cv2.resize(img, np.transpose(target_size, (1,0)))  # for 2d image
             result.append(img)
         result = np.float32(result)
         return result

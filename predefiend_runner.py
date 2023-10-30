@@ -129,7 +129,7 @@ def medical_runner(target_category:Union[None, int, str]=1, task:str='luna', dat
     batch_size:int=16
     target_category:Union[None, int, str]=target_category  # info of the running process
     # more functions
-    im_selection_extra:float=0.05  # importance matrices attributes
+    im_selection_extra:float=0.2 if task=='siim' else 0.05  # importance matrices attributes
     max_iter=None  # early stop
     groups:int=1  # no group convolution here
     ram:bool=False  # if it's a regression task
