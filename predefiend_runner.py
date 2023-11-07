@@ -124,7 +124,8 @@ def catsdog3d_runner(target_category:Union[None, int, str]=1, task:str='catsdogs
                     Agent.creator_main(eval_act='corr', mm_ratio=1.5, use_origin=use_origin, tanh_flag=True)
     
 
-def medical_runner(target_category:Union[None, int, str]=1, task:str='luna', dataset_split:str='val', cam_save:bool=True):
+def medical_runner(target_category:Union[None, int, str]=1, task:str='luna', dataset_split:str='val', cam_save:bool=True,
+                   eval_flag:str='basic'):
     # -------------------------------- optional: -------------------------------- #
     batch_size:int=16
     target_category:Union[None, int, str]=target_category  # info of the running process
@@ -176,12 +177,12 @@ def medical_runner(target_category:Union[None, int, str]=1, task:str='luna', dat
                                     use_pred=use_pred
                                     )
                     Agent.analyzer_main()
-                    Agent.creator_main(eval_act='corr', mm_ratio=1.5, cam_save=cam_save, use_origin=True)
+                    Agent.creator_main(eval_act=eval_flag, mm_ratio=1.5, cam_save=cam_save, use_origin=True)
 
 
 def esmira_runner(target_category:Union[None, int, str]=1, data_dir:str='D:\\ESMIRA\\ESMIRA_common',
                 target_catename:list=['EAC','ATL'], target_site:list=['Wrist'], target_dirc:list=['TRA', 'COR'],
-                cam_save:bool=True):
+                cam_save:bool=True, eval_flag:str='basic'):
     # -------------------------------- optional: -------------------------------- #
     batch_size:int=5
     target_category:Union[None, int, str]=target_category  # info of the running process
@@ -200,7 +201,7 @@ def esmira_runner(target_category:Union[None, int, str]=1, data_dir:str='D:\\ESM
     import torch
 
     dataset_generator = ESMIRA_generator(data_dir, target_catename, target_site, target_dirc)
-    for fold_order in range(5):
+    for fold_order in range(2,3):
         _, target_dataset = dataset_generator.returner(phase='train', fold_order=fold_order, mean_std=False)
         dataset = DataLoader(dataset=target_dataset, batch_size=batch_size, shuffle=False,
             num_workers=4, pin_memory=True)
@@ -259,7 +260,7 @@ def esmira_runner(target_category:Union[None, int, str]=1, data_dir:str='D:\\ESM
                                     use_pred=use_pred
                                     )
                     Agent.analyzer_main()
-                    Agent.creator_main(eval_act='corr', mm_ratio=2, use_origin=True, tanh_flag=tanh_flag, cam_save=cam_save)
+                    Agent.creator_main(eval_act=eval_flag, mm_ratio=2, use_origin=True,tanh_flag=tanh_flag, cam_save=cam_save, img_compress=True)
 
 
 def ramris_pred_runner(data_dir='', target_category=['EAC'], 
