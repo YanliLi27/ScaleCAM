@@ -20,6 +20,7 @@ from scipy import stats
 from cam_components.agent.scat_plot import scatter_plot
 from cam_components.agent.eval_utils import cam_regularizer, cam_input_normalization, pred_score_calculator, text_save
 from typing import Union
+from scipy.special import softmax
 # cam methods
 from cam_components.methods import GradCAM_A, GradCAM_P, FullCAM_A, FullCAM_P, GradCAMPP_A, GradCAMPP_P, XGradCAM_A, XGradCAM_P
 
@@ -557,6 +558,9 @@ class CAMAgent:
         elif eval_func in ['logit', 'basic']:
             increase = 0.0
             drop = 0.0
+            acc_ori = []
+            acc_cam = []
+            acc_gt = []
             if eval_func in ['logit']:
                 logit_flag = True
 
@@ -691,6 +695,9 @@ class CAMAgent:
                                                                                             origin_pred_category=origin_category)
                         
                         single_drop = nega_score > single_cam_nega_scores  # 新的drop越大越好
+                    acc_ori.extend(np.argmax(softmax(cam_pred.cpu().data.numpy(), axis=-1),axis=-1))
+                    acc_cam.extend(predict_category)
+                    acc_gt.extend(y.item())
                     counter += x.shape[0]
                     single_increase = single_origin_confidence < single_cam_confidence
                     increase += single_increase.sum().item()

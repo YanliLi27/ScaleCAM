@@ -22,7 +22,7 @@ if __name__ == '__main__':
                 cam_method_zoo = ['gradcam', 'fullcam', 'gradcampp', 'xgradcam']
             naturalimage_runner(target_category=None, model_flag=model, task=task, dataset_split='val',
                                 max_iter=None, randomization=False, random_severity=0,
-                                eval_flag='logit', tan_flag=tan_flag, cam_method=cam_method_zoo,
+                                eval_flag='basic', tan_flag=tan_flag, cam_method=cam_method_zoo,
                                 cam_save=False)
             # for tc_s in tc:
             #     naturalimage_runner(target_category=tc_s, model_flag=model, task=task, dataset_split='val',
