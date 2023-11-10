@@ -695,8 +695,8 @@ class CAMAgent:
                                                                                             origin_pred_category=origin_category)
                         
                         single_drop = nega_score > single_cam_nega_scores  # 新的drop越大越好
-                    acc_ori.extend(np.argmax(softmax(cam_pred.cpu().data.numpy(), axis=-1),axis=-1))
-                    acc_cam.extend(predict_category)
+                    acc_cam.extend(np.argmax(softmax(cam_pred.cpu().data.numpy(), axis=-1),axis=-1))
+                    acc_ori.extend(predict_category)
                     acc_gt.extend(y.cpu().data.numpy())
                     counter += x.shape[0]
                     single_increase = single_origin_confidence < single_cam_confidence
