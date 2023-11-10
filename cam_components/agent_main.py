@@ -15,10 +15,10 @@ from cam_components.agent.target_cam_calculation import target_cam_selection
 from cam_components.agent.im_funcs import im_reader, maxmin_reader
 from cam_components.agent.img_creator import origin_creator, cam_creator, origin_creator3d
 # for evaluation
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, accuracy_score
 from scipy import stats
 from cam_components.agent.scat_plot import scatter_plot
-from cam_components.agent.eval_utils import cam_regularizer, cam_input_normalization, pred_score_calculator, text_save
+from cam_components.agent.eval_utils import cam_regularizer, cam_input_normalization, pred_score_calculator, text_save, text_save_acc
 from typing import Union
 from scipy.special import softmax
 # cam methods
@@ -697,7 +697,7 @@ class CAMAgent:
                         single_drop = nega_score > single_cam_nega_scores  # 新的drop越大越好
                     acc_ori.extend(np.argmax(softmax(cam_pred.cpu().data.numpy(), axis=-1),axis=-1))
                     acc_cam.extend(predict_category)
-                    acc_gt.extend(y.item())
+                    acc_gt.extend(y.cpu().data.numpy())
                     counter += x.shape[0]
                     single_increase = single_origin_confidence < single_cam_confidence
                     increase += single_increase.sum().item()
@@ -747,11 +747,17 @@ class CAMAgent:
             avg_increase = increase/counter
             avg_drop = drop/counter
 
+            acc_original = accuracy_score(acc_gt, acc_ori)
+            acc_cammasked = accuracy_score(acc_gt, acc_cam)
+
             print('increase:', avg_increase)
             print('avg_drop:', avg_drop)
+            print('acc of original:', acc_original)
+            print('acc after masking:', acc_cammasked)
             corr_dir = cam_dir.replace('./output/cam/', './output/figs/')
             if not os.path.exists(corr_dir):
                 os.makedirs(corr_dir)
             eval_borl_save_name = os.path.join(corr_dir, f'eval_with_{eval_func}.txt')
             text_save(eval_borl_save_name, avg_increase, avg_drop, counter)
+            text_save_acc(os.path.join(corr_dir,'eval_with_acc.txt'), avg_increase, avg_drop, counter)
         # --------------------------------------  cam evaluate  -------------------------------------- #

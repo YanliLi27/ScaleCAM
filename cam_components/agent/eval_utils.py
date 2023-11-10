@@ -75,4 +75,15 @@ def text_save(save_path, increase, decrease, total_samples):
         F.write('\n')
         F.write(f'decrease: {str(decrease)}')
 
+def text_save_acc(save_path, increase, decrease, total_samples):
+    if not os.path.isfile(save_path):
+            with open(save_path, 'w') as F:
+                F.write('Increase and decrease:')
+    with open(save_path, 'a') as F:
+        F.write('\n')
+        F.write(f'total number: {str(total_samples)}')  
+        F.write('\n')
+        F.write(f'acc ori: {str(increase)}')
+        F.write('\n')
+        F.write(f'acc cam: {str(decrease)}')
 
