@@ -562,7 +562,8 @@ class CAMAgent:
             acc_ori = []
             acc_cam = []
             acc_gt = []
-            acc_fm = []  # feature masked
+            if im is not None:
+                acc_fm = []  # feature masked
             if eval_func in ['logit']:
                 logit_flag = True
 
@@ -688,12 +689,14 @@ class CAMAgent:
                     cam_pred = model(cam_input)
 
                     # TODO feature filter inference
-                    feature_inside = model.features(x)  # [batch, channel, L, W, (D)]
-                    B, C, L, D = x.shape
-                    im_weights = np.zeros([B, C])
-                    im_weights[:] = im[predict_category]
-                    feature_inside = im_weights[:, :, None, None]* feature_inside 
-                    fm_pred = model.classifier(torch.flatten(model.avgpool(feature_inside),1))
+                    if im is not None:
+                        feature_inside = model.features(x)  # [batch, channel, L, W, (D)]
+                        B, C, L, D = x.shape
+                        im_weights = np.zeros([B, 512])
+                        im_weights[:] = im[predict_category]
+                        feature_inside = torch.from_numpy(im_weights[:, :, None, None]).to(device)* feature_inside 
+                        feature_flat = model.avgpool(feature_inside).type(torch.float32)
+                        fm_pred = model.classifier(torch.flatten(feature_flat, 1))
 
                     if eval_func == 'basic':
                         origin_category, single_origin_confidence = predict_category, pred_score
@@ -711,7 +714,8 @@ class CAMAgent:
                     acc_cam.extend(np.argmax(softmax(cam_pred.cpu().data.numpy(), axis=-1),axis=-1))
                     acc_ori.extend(predict_category)
                     acc_gt.extend(y.cpu().data.numpy())
-                    acc_fm.extend(np.argmax(softmax(fm_pred.cpu().data.numpy(), axis=-1),axis=-1))
+                    if im is not None:
+                        acc_fm.extend(np.argmax(softmax(fm_pred.cpu().data.numpy(), axis=-1),axis=-1))
                     counter += x.shape[0]
                     single_increase = single_origin_confidence < single_cam_confidence
                     increase += single_increase.sum().item()
@@ -763,7 +767,8 @@ class CAMAgent:
 
             acc_original = accuracy_score(acc_gt, acc_ori)
             acc_cammasked = accuracy_score(acc_gt, acc_cam)
-            acc_fmasked = accuracy_score(acc_gt, acc_fm)
+            if im is not None:
+                acc_fmasked = accuracy_score(acc_gt, acc_fm)
             # acc_original = roc_auc_score(acc_gt, acc_ori)
             # acc_cammasked = roc_auc_score(acc_gt, acc_cam)
 
@@ -771,7 +776,8 @@ class CAMAgent:
             print('avg_drop:', avg_drop)
             print('acc of original:', acc_original)
             print('acc after masking:', acc_cammasked)
-            print('acc after feature masking:', acc_fmasked)
+            if im is not None:
+                print('acc after feature masking:', acc_fmasked)
             corr_dir = cam_dir.replace('./output/cam/', './output/figs/')
             if not os.path.exists(corr_dir):
                 os.makedirs(corr_dir)

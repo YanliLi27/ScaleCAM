@@ -42,13 +42,13 @@ def naturalimage_runner(target_category:Union[None, int, str]=None, model_flag:s
 
     # -------------------------------- start loop -------------------------------- #
     if cam_method==None:
-        cam_method_zoo = ['gradcam', 'fullcam', 'gradcampp', 'xgradcam']
+        cam_method_zoo = ['fullcam', 'gradcam', 'gradcampp', 'xgradcam']
     else:
         cam_method_zoo = cam_method
     # maxmin_flag_zoo = [True, False]  # intensity scaling
     # remove_minus_flag_zoo = [False, True]  # remove the part below zero, default: True in the original Grad CAM
     mm_rm_zoo =  [[True, False], [False, True]]
-    im_selection_mode_zoo = ['all', 'diff_top']  # use feature selection or not -- relied on the importance matrices
+    im_selection_mode_zoo = ['diff_top', 'all']  # use feature selection or not -- relied on the importance matrices
 
     for method in cam_method_zoo:
         for im in im_selection_mode_zoo:
