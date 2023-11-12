@@ -14,7 +14,7 @@ def naturalimage_runner(target_category:Union[None, int, str]=None, model_flag:s
     batch_size:int=16
     target_category:Union[None, int, str]=target_category  # info of the running process
     # more functions
-    im_selection_extra:float=0.3 if task=='Imagenet' else 0.05  # importance matrices attributes
+    im_selection_extra:float=0.3 if task in ['Imagenet', 'MNIST']  else 0.05  # importance matrices attributes
     max_iter=max_iter  # early stop
     groups:int=1
     ram:bool=False  # if it's a regression task

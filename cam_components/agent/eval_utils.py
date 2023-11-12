@@ -10,6 +10,13 @@ def cam_regularizer(mask):
     mask = mask - np.min(mask)/(np.max(mask)-np.min(mask)+1e-7)  # for dataset-level normalization
     return mask
 
+def cam_regularizer_binary(mask):
+    mask = np.maximum(mask, 0)
+    mask = np.minimum(mask, 1)
+    mask = mask - np.min(mask)/(np.max(mask)-np.min(mask)+1e-7)  # for dataset-level normalization
+    threshold = np.min(mask[mask>0])
+    return np.where(mask > threshold, 1, 0)
+
 def cam_input_normalization(cam_input):
     if cam_input.shape[1]==3:
         data_transform = transforms.Compose([
