@@ -13,7 +13,7 @@ def target_cam_selection(importance_matrix: np.array, mode='max', extra=0.5):
             (5) For diff_top, the ratio of top 'extra', yet the top extra means the abs of the input
     return the merged importance matrix -- [num_classes, length_feature]
     '''
-    assert mode in ['max', 'top', 'diff_top', 'freq', 'index', 'all']
+    assert mode in ['max', 'top', 'diff_top', 'freq', 'index', 'all', 'reverse_diff_top']
     # im [num_classes, num_features]
     ClassLen, FeatureLen = importance_matrix.shape
     Return_dtype = importance_matrix.dtype
@@ -40,6 +40,14 @@ def target_cam_selection(importance_matrix: np.array, mode='max', extra=0.5):
             top_value = sorted_item[len(sorted_item)-extra_index]
             abs_item[abs_item<top_value] = 0
             abs_item[abs_item>=top_value] = 1
+            item = abs_item
+        elif mode=='reverse_diff_top':
+            abs_item = np.abs(item)
+            sorted_item = sorted(abs_item)
+            extra_index = int(extra * len(sorted_item))
+            top_value = sorted_item[len(sorted_item)-extra_index]
+            abs_item[abs_item<top_value] = 1
+            abs_item[abs_item>=top_value] = 0
             item = abs_item
         elif mode=='index':
             item[:extra] = 0

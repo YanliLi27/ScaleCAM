@@ -75,7 +75,7 @@ class CAMAgent:
         # Extra function of the CAM creator
         self.maxmin_flag = maxmin_flag
         self.remove_minus_flag = remove_minus_flag
-        assert im_selection_mode in ['max', 'top', 'diff_top', 'freq', 'index', 'all']
+        assert im_selection_mode in ['reverse_diff_top', 'max', 'top', 'diff_top', 'freq', 'index', 'all']
         self.im_selection_mode = im_selection_mode
         self.im_selection_extra = im_selection_extra
         self.use_pred = use_pred
