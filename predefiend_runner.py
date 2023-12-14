@@ -214,7 +214,7 @@ def esmira_runner(target_category:Union[None, int, str]=1, data_dir:str='D:\\ESM
         in_channel = groups * 5
         model = ModelClass(in_channel, num_classes=2)
         weight_path = output_finder(target_catename, target_site, target_dirc, fold_order)
-        weight_abs_path = os.path.join('D:\\ESMIRAcode\\RA_Class\\models\\weights', weight_path)
+        weight_abs_path = os.path.join('D:\\ESMIRAcode\\RA_Class\\models\\weights\\modelclass_save', weight_path)
         if os.path.isfile(weight_abs_path):
             checkpoint = torch.load(weight_abs_path)
             model.load_state_dict(checkpoint)
