@@ -351,8 +351,8 @@ class CAMAgent:
                                         ) as cam:
 
                     grayscale_cam, predict_category, pred_score, nega_score = cam(input_tensor=x,
-                                                                                gt=y,
-                                                                                target_category=tc)
+                                                                                target_category=tc,
+                                                                                gt=y)
                     # theory: grayscale_cam -- batch * (target_layer_aggregated)_array[groups, (depth), length, width]
                     # proved: grayscale_cam -- 16 * [1(groups), 256, 256] - batch * [1(groups), 256, 256]
 
@@ -597,8 +597,8 @@ class CAMAgent:
                                     ) as cam:
 
                 grayscale_cam, predict_category, pred_score, nega_score = cam(input_tensor=x,
-                                                                            gt=y,
-                                                                            target_category=creator_tc)
+                                                                            target_category=creator_tc,
+                                                                            gt=y)
                 # theory: grayscale_cam -- batch * (target_layer_aggregated)_array[groups, (depth), length, width]
                 # proved: grayscale_cam -- 16 * [1(groups), 256, 256] - batch * [1(groups), 256, 256]
                 # pred_score -- while logit: logit, while basic: softmaxed logit

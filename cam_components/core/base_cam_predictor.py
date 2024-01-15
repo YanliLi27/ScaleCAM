@@ -192,7 +192,7 @@ class BaseCAM_P:
         return prob_predict_category, predict_category, pred_scores, nega_scores, target_category
 
 
-    def forward(self, input_tensor, gt, target_category=None):
+    def forward(self, input_tensor, target_category=None, gt=None):
         if self.cuda:
             input_tensor = input_tensor.cuda()
 
@@ -357,12 +357,12 @@ class BaseCAM_P:
 
     def __call__(self,
                  input_tensor,
-                 gt,
-                 target_category=None):
+                 target_category=None,
+                 gt=None):
 
         return self.forward(input_tensor,
-                            gt,
-                            target_category)  # [cam, predict_category]
+                            target_category,
+                            gt)  # [cam, predict_category]
 
     def __del__(self):
         self.activations_and_grads.release()
