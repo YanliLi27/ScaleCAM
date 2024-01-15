@@ -1,6 +1,6 @@
 # ScaleCAM (Unfinished version)
 
-## The code for "Towards more informative saliency maps for medical images" 
+## The code for "Integrated feature analysis for deep learning interpretation and class_activation_maps" 
 
 > Thanks to https://github.com/frgfm/torch-cam and https://github.com/jacobgil/pytorch-grad-cam for their functions.
 
