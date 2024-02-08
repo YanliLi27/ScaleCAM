@@ -11,7 +11,7 @@ def ramris_pred_runner(data_dir='', target_category:Union[None, int, str, list]=
                  target_reader=['Reader1', 'Reader2'], task_mode='clip', phase='train',
                  full_img:bool=True, dimension:int=2,
                  target_output:Union[None, int, str, list]=[0],
-                 cluster:Union[None, list]=[15, 3, 10], cluster_start:int=0,
+                 cluster:Union[None, list]=[15, 3, 10], cluster_start:int=15,
                  tanh:bool=True):
     # -------------------------------- optional: -------------------------------- #
     batch_size:int=2
