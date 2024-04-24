@@ -89,32 +89,35 @@ def ramris_pred_runner(data_dir='', target_category:Union[None, int, str, list]=
         cam_dir = './output/cam/RAMRISpred_{}'.format(weight_path.replace('.model', ''))
 
         # -------------------------------- start loop -------------------------------- #
-        cam_method_zoo = ['gradcam']#, 'fullcam', 'gradcampp', 'xgradcam']
-        maxmin_flag_zoo = [True, False]  # intensity scaling
-        remove_minus_flag_zoo = [False, True]  # remove the part below zero, default: True in the original Grad CAM
+        cam_method_zoo = ['gradcam','fullcam']#, 'fullcam', 'gradcampp', 'xgradcam']
+        # maxmin_flag_zoo = [True, False]  # intensity scaling
+        # remove_minus_flag_zoo = [False, True]  # remove the part below zero, default: True in the original Grad CAM
+        mmrm = [[True, False], [False, True]]
         im_selection_mode_zoo = ['all']#, 'diff_top']  # use feature selection or not -- relied on the importance matrices
 
         for method in cam_method_zoo:
             for im in im_selection_mode_zoo:
-                for mm in maxmin_flag_zoo:
-                    for rm in remove_minus_flag_zoo:
-                        if mm and tanh:
-                            tanh_flag = True
-                        else:
-                            tanh_flag = False
-                        Agent = CAMAgent(model, target_layer, dataset,  
-                                        num_out_channel, num_classes,  
-                                        groups, fold_order, ram,
-                                        # optional:
-                                        cam_method=method, im_dir=im_dir, cam_dir=cam_dir, # cam method and im paths and cam output
-                                        batch_size=batch_size, target_category=target_output,  # info of the running process
-                                        maxmin_flag=mm, remove_minus_flag=rm, # creator
-                                        im_selection_mode=im, im_selection_extra=im_selection_extra, # importance matrices attributes
-                                        max_iter=max_iter,  # early stop
-                                        randomization=False, random_severity=0,  # model randomization for sanity check
-                                        use_pred=use_pred
-                                        )
-                        Agent.analyzer_main()
-                        Agent.creator_main(eval_act=False, mm_ratio=2, use_origin=True, 
-                                           cluster=cluster, cluster_start=cluster_start,
-                                           tanh_flag=tanh_flag)
+                for am in mmrm:
+                    mm, rm = am
+                # for mm in maxmin_flag_zoo:
+                #     for rm in remove_minus_flag_zoo:
+                    if mm and tanh:
+                        tanh_flag = True
+                    else:
+                        tanh_flag = False
+                    Agent = CAMAgent(model, target_layer, dataset,  
+                                    num_out_channel, num_classes,  
+                                    groups, fold_order, ram,
+                                    # optional:
+                                    cam_method=method, im_dir=im_dir, cam_dir=cam_dir, # cam method and im paths and cam output
+                                    batch_size=batch_size, target_category=target_output,  # info of the running process
+                                    maxmin_flag=mm, remove_minus_flag=rm, # creator
+                                    im_selection_mode=im, im_selection_extra=im_selection_extra, # importance matrices attributes
+                                    max_iter=max_iter,  # early stop
+                                    randomization=False, random_severity=0,  # model randomization for sanity check
+                                    use_pred=use_pred
+                                    )
+                    Agent.analyzer_main()
+                    Agent.creator_main(eval_act=False, mm_ratio=2, use_origin=True, 
+                                        cluster=cluster, cluster_start=cluster_start,
+                                        tanh_flag=tanh_flag)

@@ -1,8 +1,9 @@
 import cv2
 import numpy as np
+from typing import Union
 
 
-def show_cam_on_image(img: np.ndarray,
+def show_cam_on_image(img: Union[np.ndarray, None],
                       mask: np.ndarray,
                       use_rgb: bool = False,
                       colormap: int = cv2.COLORMAP_JET,
@@ -41,11 +42,11 @@ def show_cam_on_image(img: np.ndarray,
     # return np.uint8(255 * cam)
     heatmap = np.float32(heatmap)
 
-    if np.max(img) > 1:
-        raise Exception(
-            "The input image should np.float32 in the range [0, 1]")
-    img = (img * 255).astype(np.float32)
-    if use_origin:
+    if use_origin and img is not None:
+        if np.max(img) > 1:
+            raise Exception(
+                "The input image should np.float32 in the range [0, 1]")
+        img = (img * 255).astype(np.float32)
         cam = cv2.addWeighted(heatmap, 0.7, img, 0.3, 0)
     else:
         cam = heatmap

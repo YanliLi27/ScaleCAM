@@ -69,6 +69,14 @@ def cam_creator(grayscale_cam, predict_category, confidence, organ_groups, origi
     return concat_img_all, output_label, cf_num
 
 
+def tc_cam_creator(grayscale_cam):
+    # [1, W, L]
+    grayscale_cam_group = grayscale_cam[0]  # [1, W, L] -> [W, L]
+    cam_image_group = show_cam_on_image(None, grayscale_cam_group, use_rgb=True, use_origin=False)
+    cam_image_group = cv2.cvtColor(cam_image_group, cv2.COLOR_RGB2BGR)
+    return cam_image_group  # [W, L, 3]
+
+
 def origin_creator3d(img:torch.Tensor, organ_groups:int=1):
     B, C, D, L, W = img.shape  # # [batch, 1, z, y, x]
     if organ_groups==1:
