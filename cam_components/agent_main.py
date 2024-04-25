@@ -325,7 +325,7 @@ class CAMAgent:
                 raise ValueError('unsupported input: not signal(batch, width, lengths), and not 2D, 2.5D or 3D images')
             if len(origin_img.shape)>5:
                 origin_img = origin_img.transpose(0, 1, 5, 2, 3, 4)  # because we got no way for colored 3d images
-                # origin_img -- [batch, organ_groups, channel=3, z, y, x]
+                # origin_img -- [batch, organ_groups, channel=3, z, y, x] [B, G, C, D, W, L]
             x = x.to(dtype=torch.float32).to(device)
             y = y.to(dtype=torch.float32).to(device)
 
@@ -364,7 +364,8 @@ class CAMAgent:
                 # tc_score: [tc_len*1]
                 tc_nega_score.append(nega_score)
                 # tc_nega_score: [tc_len*1]
-
+            tc_pred_category = np.transpose(np.asarray(tc_pred_category), axes=(1, 0))
+            tc_score = np.transpose(np.asarray(tc_score), axes=(1, 0))
             # ---------------------------------------  cam create  --------------------------------------- #
             if not os.path.exists(cam_dir):
                 os.makedirs(cam_dir)
@@ -471,11 +472,10 @@ class CAMAgent:
                     # [2, 15, 2, 1, 512, 512]
 
                 # tc_cam [B(batch), TC(category), G(groups), (depth), W, L] 5/6
-                for i in range(B):
-                    in_fold_counter += 1
-                    for tc in range(TC):
-                        if len(tc_cam.shape)==5:  # [B(batch), TC(category), G(groups), W, L] 
-                            # for 2D input
+                if len(tc_cam.shape)==5:  # [B(batch), TC(category), G(groups), W, L] 
+                    for i in range(B):
+                        in_fold_counter += 1
+                        for tc in range(TC):
                             concat_img_all, output_label, cf_num = cam_creator(tc_cam[i][tc], tc_pred_category[i],\
                                                                             tc_score[i], self.groups, origin_img[i], \
                                                                             use_origin=use_origin)
@@ -489,47 +489,67 @@ class CAMAgent:
                                 np.save(backup_name, np.asarray({'img':origin_img[i],'cam':tc_cam[i][tc]}))
                                 # grayscale_cam [-batch- * [1(groups), 256, 256]]
                                 # origin_img [-batch-, organ_groups, channel=3, y, x]
-                        
-                        elif len(tc_cam.shape)==6:
-                            # for 3D input
-                            output_label = tc_pred_category[i]
-                            cf_num = str(np.around(tc_score[i], decimals=3))
-                            # save the cam
-                            
-                            if tc_cam.shape[3]==1:  # compress
-                                save_name = os.path.join(cam_dir, f'fold{self.fold_order}_{in_fold_counter}_{tc}.jpg')
-                                origin_save_name = save_name.replace('.jpg', '_ori.nii.gz')
-                                for group_index in range(G):
-                                    neo_save_name = save_name.replace('.jpg', '_gro{}_site{}_pr{}_cf{}.jpg'.format(group_index, tc, output_label, cf_num))
-                                    neo_origin_save_name = origin_save_name.replace('_ori.nii.gz', '_ori_gro{}_pr{}_cf{}.nii.gz'.format(group_index, output_label, cf_num))
-                                    # tc_cam [B, TC, G, 1, W, L] -> [1, W, L]
-                                    concat_img_all = tc_cam_creator(tc_cam[i][tc][group_index])  # [W, L, 3]
-                                    cv2.imwrite(save_name, concat_img_all)
-                                    writter = sitk.ImageFileWriter()
-                                    if os.path.isfile(neo_origin_save_name):
-                                        continue
-                                    else:
-                                        writter.SetFileName(neo_origin_save_name)
-                                        # [batch, organ_groups, z, y, x, channel] to [batch, organ_groups, z, y, x]
-                                        # TODO currently we just use the second layer of input:
-                                        writter.Execute(sitk.GetImageFromArray(origin_img[i][group_index][1]))
+                elif len(tc_cam.shape)==6 and tc_cam.shape[3]!=1:
+                    for i in range(B):
+                        in_fold_counter += 1
+                        output_label = tc_pred_category[i]
+                        cf_num = str(np.around(tc_score[i], decimals=3))
+                        for tc in range(TC):
+                            save_name = os.path.join(cam_dir, f'fold{self.fold_order}_{in_fold_counter}.nii.gz')
+                            origin_save_name = save_name.replace('.jpg', '_ori.nii.gz')
+                            for group_index in range(G):
+                                neo_save_name = save_name.replace('.nii.gz', '_gro{}_site{}_pr{}_cf{}.nii.gz'.format(group_index, tc, output_label, cf_num))
+                                neo_origin_save_name = origin_save_name.replace('_ori.nii.gz', '_ori_gro{}_pr{}_cf{}.nii.gz'.format(group_index, output_label, cf_num))
+                                writter = sitk.ImageFileWriter()
+                                writter.SetFileName(neo_save_name)
+                                writter.Execute(sitk.GetImageFromArray(tc_cam[i][tc][group_index]))
+                                if os.path.isfile(neo_origin_save_name):
+                                    continue
+                                else:
+                                    writter.SetFileName(neo_origin_save_name)
+                                    # [batch, organ_groups, z, y, x, channel] to [batch, organ_groups, z, y, x]
+                                    # TODO currently we just use the second layer of input:
+                                    writter.Execute(sitk.GetImageFromArray(origin_img[i][group_index][1]))
+
+                elif len(tc_cam.shape)==6 and tc_cam.shape[3]==1:
+                    for i in range(B):
+                        in_fold_counter += 1
+                        output_label = tc_pred_category[i]
+                        cf_num = str(np.around(tc_score[i], decimals=2))
+                        TC_img = []
+                        save_name = os.path.join(cam_dir, f'fold{self.fold_order}_{in_fold_counter}.jpg')
+                        neo_save_name = save_name.replace('.jpg', f'_cf{cf_num}.jpg')
+                        for group_index in range(G):
+                            origin_save_name = save_name.replace('.jpg', '_ori_gro{}.nii.gz'.format(group_index))
+                            ori_img = origin_img[i][group_index][1]
+                            if os.path.isfile(origin_save_name):
+                                pass
                             else:
-                                save_name = os.path.join(cam_dir, f'fold{self.fold_order}_{in_fold_counter}.nii.gz')
-                                for group_index in range(G):
-                                    neo_save_name = save_name.replace('.nii.gz', '_gro{}_site{}_pr{}_cf{}.nii.gz'.format(group_index, tc, output_label, cf_num))
-                                    neo_origin_save_name = origin_save_name.replace('_ori.nii.gz', '_ori_gro{}_pr{}_cf{}.nii.gz'.format(group_index, output_label, cf_num))
-                                    writter = sitk.ImageFileWriter()
-                                    writter.SetFileName(neo_save_name)
-                                    writter.Execute(sitk.GetImageFromArray(tc_cam[i][tc][group_index]))
-                                    if os.path.isfile(neo_origin_save_name):
-                                        continue
-                                    else:
-                                        writter.SetFileName(neo_origin_save_name)
-                                        # [batch, organ_groups, z, y, x, channel] to [batch, organ_groups, z, y, x]
-                                        # TODO currently we just use the second layer of input:
-                                        writter.Execute(sitk.GetImageFromArray(origin_img[i][group_index][1]))
-                        else:
-                            raise ValueError(f'not supported shape: {tc_cam.shape}') 
+                                writter = sitk.ImageFileWriter()
+                                writter.SetFileName(origin_save_name)
+                                # [batch, organ_groups, z, y, x, channel] to [batch, organ_groups, z, y, x]
+                                # TODO currently we just use the second layer of input:
+                                writter.Execute(sitk.GetImageFromArray(ori_img))
+                            TC_G_img = []
+                            for tc in range(TC):
+                            # for 3D input 2D output
+                                # tc_cam [B, TC, G, 1, W, L] -> [1, W, L]
+                                concat_img_all = tc_cam_creator(tc_cam[i][tc][group_index])  # [W, L, 3]
+                                TC_G_img.append(concat_img_all)
+                            TC_G_array = cv2.hconcat(TC_G_img) # [x, N*y, 3]
+
+                            scale = int(ori_img.shape[0]//TC)
+                            TC_G_ori = [ori_img[s]*255 for s in range(0, ori_img.shape[0], scale)]  # [s * 512, 512]
+                            TC_G_ori = TC_G_ori[:TC] if len(TC_G_ori)>TC else TC_G_ori
+                            TC_G_ori_array = np.uint8(cv2.hconcat(TC_G_ori))
+                            TC_G_ori_array = np.transpose(np.repeat(TC_G_ori_array[np.newaxis, :], 3, axis=0), axes=(1, 2, 0))
+                            TC_img.append(TC_G_array)
+                            TC_img.append(TC_G_ori_array)
+                        TC_array = cv2.vconcat(TC_img)
+                        cv2.imwrite(neo_save_name, TC_array)
+
+                else:
+                    raise ValueError(f'not supported shape: {tc_cam.shape}') 
 
 
     def _cam_creator_step_depth(self,  target_layer, # required attributes

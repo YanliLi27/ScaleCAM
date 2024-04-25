@@ -14,7 +14,7 @@ def ramris_pred_runner(data_dir='', target_category:Union[None, int, str, list]=
                  cluster:Union[None, list]=[15, 3, 10], cluster_start:int=15,
                  tanh:bool=True):
     # -------------------------------- optional: -------------------------------- #
-    batch_size:int=2
+    batch_size:int=1
     target_category:Union[None, int, str, list]=target_category  # info of the running process
     # more functions
     im_selection_extra:float=0.05  # importance matrices attributes
@@ -36,10 +36,10 @@ def ramris_pred_runner(data_dir='', target_category:Union[None, int, str, list]=
     dataset_generator = ESMIRA_generator(data_dir, target_category, target_site, target_dirc, target_reader, 
                                          target_biomarker, task_mode, working_dir='D:\\ESMIRAcode\\RA_CLIP\\')
 
-    for fold_order in range(0, 1):
-        _, val_dataset = dataset_generator.returner(task_mode=task_mode, phase=phase, fold_order=fold_order,
-                                                                material='img', monai=True, full_img=full_img, dimension=dimension)
-        dataset = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=False,
+    for fold_order in range(2, 3):
+        train_dataset, val_dataset = dataset_generator.returner(task_mode=task_mode, phase=phase, fold_order=fold_order,
+                                                                material='img', monai=True, full_img=full_img, dimension=dimension, balance=False)
+        dataset = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=False,
             num_workers=4, pin_memory=True)
         # input: [N*5, 512, 512] + int(label)
 
@@ -89,10 +89,10 @@ def ramris_pred_runner(data_dir='', target_category:Union[None, int, str, list]=
         cam_dir = './output/cam/RAMRISpred_{}'.format(weight_path.replace('.model', ''))
 
         # -------------------------------- start loop -------------------------------- #
-        cam_method_zoo = ['gradcam','fullcam']#, 'fullcam', 'gradcampp', 'xgradcam']
+        cam_method_zoo = ['gradcam']#,'fullcam']#, 'fullcam', 'gradcampp', 'xgradcam']
         # maxmin_flag_zoo = [True, False]  # intensity scaling
         # remove_minus_flag_zoo = [False, True]  # remove the part below zero, default: True in the original Grad CAM
-        mmrm = [[True, False], [False, True]]
+        mmrm = [[False, True], [True, True]]
         im_selection_mode_zoo = ['all']#, 'diff_top']  # use feature selection or not -- relied on the importance matrices
 
         for method in cam_method_zoo:

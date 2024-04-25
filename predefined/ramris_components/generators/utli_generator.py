@@ -541,20 +541,24 @@ class ESMIRA_generator:
 
 
     def returner(self, task_mode:str='clip', phase:str='train', fold_order:int=0, material:Union[str, list]='img',
-                 monai:bool=False, full_img:bool=False, dimension:int=2) ->Tuple[Union[None, Dataset], Dataset]:
+                 monai:bool=False, full_img:bool=False, dimension:int=2, balance:bool=True) ->Tuple[Union[None, Dataset], Dataset]:
         if monai:
             from monai import transforms
-            transform = [transforms.Compose([
-                                            # transforms.RandGaussianNoise(0.2, 0, 0.1),
-                                            transforms.RandFlip(0.5, 0),
-                                            transforms.RandRotate((10), prob=0.5),
-                                            transforms.RandAffine(prob=1.0, translate_range=(20, 20)),
-                                            # transforms.RandShiftIntensity(offsets=0.1, safe=True, prob=0.2),
-                                            # transforms.RandStdShiftIntensity(factors=0.1, prob=0.2),
-                                            # transforms.RandBiasField(degree=2, coeff_range=(0, 0.1), prob=0.2),
-                                            # transforms.RandAdjustContrast(prob=0.5, gamma=(0.9, 1.1)),
-                                            transforms.RandHistogramShift(num_control_points=10, prob=0.2),
-                                            transforms.RandZoom(prob=0.3, min_zoom=0.9, max_zoom=1.0, keep_size=True)
+            transform = [
+                        # transforms.Compose([
+                        #                     # transforms.RandGaussianNoise(0.2, 0, 0.1),
+                        #                     transforms.RandFlip(0.5, 0),
+                        #                     transforms.RandRotate((10), prob=0.5),
+                        #                     transforms.RandAffine(prob=1.0, translate_range=(20, 20)),
+                        #                     # transforms.RandShiftIntensity(offsets=0.1, safe=True, prob=0.2),
+                        #                     # transforms.RandStdShiftIntensity(factors=0.1, prob=0.2),
+                        #                     # transforms.RandBiasField(degree=2, coeff_range=(0, 0.1), prob=0.2),
+                        #                     # transforms.RandAdjustContrast(prob=0.5, gamma=(0.9, 1.1)),
+                        #                     transforms.RandHistogramShift(num_control_points=10, prob=0.2),
+                        #                     transforms.RandZoom(prob=0.3, min_zoom=0.9, max_zoom=1.0, keep_size=True)
+                        #                     ]),
+                        transforms.Compose([
+                                            transforms.RandAffine(prob=0.0, translate_range=(20, 20)),
                                             ]),
                         transforms.Compose([
                                             transforms.RandAffine(prob=0.0, translate_range=(20, 20)),
@@ -572,7 +576,7 @@ class ESMIRA_generator:
                                         ])]
         
         if task_mode == 'clip':
-            return self._clip_returner(phase, fold_order, transform, full_img, dimension)
+            return self._clip_returner(phase, fold_order, transform, full_img, dimension, balance)
         elif task_mode == 'class':
             return self._class_returner(phase, fold_order, material, transform, dimension)
         elif task_mode == 'multi':
@@ -580,15 +584,16 @@ class ESMIRA_generator:
 
 
     def _clip_returner(self, phase:str='train', fold_order:int=0, transform=[None, None],
-                       full_img:bool=False, dimension:int=2) ->Tuple[Union[None, Dataset], Dataset]:
+                       full_img:bool=False, dimension:int=2, balance:bool=True) ->Tuple[Union[None, Dataset], Dataset]:
         if phase=='train':
             train_img_list, val_img_list = self._split_definer(self.target_img_split, fold_order) 
             train_ramris_list, val_ramris_list = self._split_definer(self.target_ramris_split, fold_order) 
             train_mse_list, val_mse_list = self._split_definer(self.target_mse, fold_order)
             
             # data balance
-            train_img_list, train_ramris_list, train_mse_list =\
-                  resampler(train_img_list, train_ramris_list, train_mse_list)
+            if balance:
+                train_img_list, train_ramris_list, train_mse_list =\
+                    resampler(train_img_list, train_ramris_list, train_mse_list)
             # val_img_list, val_ramris_list, val_mse_list =\
             #       resampler(val_img_list, val_ramris_list, val_mse_list)
 
