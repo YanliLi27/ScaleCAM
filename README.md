@@ -1,6 +1,8 @@
 # ScaleCAM (Unfinished version)
 
-## The code for "Integrated feature analysis for deep learning interpretation and class_activation_maps" 
+## The code for "Integrated feature analysis for deep learning interpretation and class_activation_maps"
+
+## The CAMs for signal processing were also included, refering to "A lightweight model for physiological signals-based sleep staging with multiclass CAM for model explainability", Y. Yang, Y. Li.
 
 > Thanks to https://github.com/frgfm/torch-cam and https://github.com/jacobgil/pytorch-grad-cam for their functions.
 
